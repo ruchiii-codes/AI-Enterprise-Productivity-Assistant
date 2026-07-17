@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from server.api.upload import router as upload_router
+
 # Create FastAPI application
 app = FastAPI(
     title="AI Enterprise Productivity Assistant",
@@ -24,6 +26,11 @@ app.add_middleware(
 )
 
 # -----------------------------
+# Register Routers
+# -----------------------------
+app.include_router(upload_router)
+
+# -----------------------------
 # Routes
 # -----------------------------
 @app.get("/")
@@ -31,6 +38,7 @@ def home():
     return {
         "message": "Welcome to AI Enterprise Productivity Assistant 🚀"
     }
+
 
 @app.get("/health")
 def health():
