@@ -20,4 +20,4 @@ def save_uploaded_file(file):
     with destination.open("wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    return destination.name
+    return destination
