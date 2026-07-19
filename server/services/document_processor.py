@@ -5,6 +5,10 @@ from server.services.pdf_service import extract_text_from_pdf
 from server.services.text_cleaner import clean_text
 from server.services.chunk_service import split_text_into_chunks
 from server.services.embedding_service import generate_embeddings
+from server.services.chroma_service import (
+    store_embeddings,
+    get_collection_count,
+)
 
 
 def process_document(file: UploadFile):
@@ -26,6 +30,16 @@ def process_document(file: UploadFile):
 
     # Generate embeddings
     embeddings = generate_embeddings(chunks)
+
+    # Store embeddings in ChromaDB
+    store_embeddings(
+        chunks=chunks,
+        embeddings=embeddings,
+        filename=file_path.name
+    )
+
+    # Print total stored chunks
+    print(f"Total chunks stored: {get_collection_count()}")
 
     return {
         "message": "File uploaded successfully.",
