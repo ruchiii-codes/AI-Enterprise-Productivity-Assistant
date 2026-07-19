@@ -1,2 +1,17 @@
 data/uploads/*
 !data/uploads/.gitkeep
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual Environment
+.venv/
+
+# Uploaded PDFs
+data/uploads/*
+!data/uploads/.gitkeep
+
+# ChromaDB
+data/chroma_db/
