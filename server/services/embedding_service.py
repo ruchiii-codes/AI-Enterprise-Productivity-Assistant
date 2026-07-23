@@ -15,3 +15,16 @@ def generate_embeddings(chunks: list[str]):
     )
 
     return embeddings
+
+
+def generate_query_embedding(query: str):
+    """
+    Generate an embedding for a user's search query.
+    """
+
+    embedding = embedding_model.encode(
+        query,
+        convert_to_numpy=True
+    )
+
+    return embedding

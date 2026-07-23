@@ -3,6 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from server.api.upload import router as upload_router
 
+from server.models.chat import ChatRequest
+from server.services.search_service import search_documents
+from server.services.llm_service import generate_response
+
 # Create FastAPI application
 app = FastAPI(
     title="AI Enterprise Productivity Assistant",
@@ -44,4 +48,17 @@ def home():
 def health():
     return {
         "status": "running"
+    }
+
+@app.post("/chat")
+def chat(request: ChatRequest):
+
+    # Retrieve relevant documents
+    results = search_documents(request.question)
+
+    # Generate AI response
+    answer = generate_response(results["prompt"])
+
+    return {
+        "answer": answer
     }
