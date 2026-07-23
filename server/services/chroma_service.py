@@ -44,3 +44,15 @@ def get_collection_count():
     Returns the number of stored documents.
     """
     return collection.count()
+
+def search_embeddings(query_embedding, top_k=3):
+    """
+    Search the most relevant document chunks.
+    """
+
+    results = collection.query(
+        query_embeddings=[query_embedding.tolist()],
+        n_results=top_k
+    )
+
+    return results
