@@ -19,12 +19,32 @@ def search_documents(query: str):
     metadatas = results["metadatas"][0]
     distances = results["distances"][0]
 
+    filtered_documents = []
+    filtered_metadatas = []
+    filtered_distances = []
+
+    for document, metadata, distance in zip(documents, metadatas, distances):
+        if distance < 0.7:
+            filtered_documents.append(document)
+            filtered_metadatas.append(metadata)
+            filtered_distances.append(distance)
+
+    if not filtered_documents:
+        return {
+            "prompt": None,
+            "documents": [],
+            "metadatas": [],
+            "distances": []
+    }        
+
+    prompt = build_prompt(query, filtered_documents)
+
     # Build prompt
     prompt = build_prompt(query, documents)
 
     return {
-        "prompt": prompt,
-        "documents": documents,
-        "metadatas": metadatas,
-        "distances": distances
-    }
+    "prompt": prompt,
+    "documents": filtered_documents,
+    "metadatas": filtered_metadatas,
+    "distances": filtered_distances
+}
