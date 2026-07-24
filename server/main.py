@@ -56,9 +56,16 @@ def chat(request: ChatRequest):
     # Retrieve relevant documents
     results = search_documents(request.question)
 
+    if results["prompt"] is None:
+        return {
+            "answer": "I couldn't find any relevant information in the uploaded documents.",
+            "sources": []
+    }
+
     # Generate AI response
     answer = generate_response(results["prompt"])
 
     return {
-        "answer": answer
+        "answer": answer,
+        "sources": results["metadatas"]
     }
