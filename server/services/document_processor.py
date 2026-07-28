@@ -1,5 +1,8 @@
 from fastapi import UploadFile
 
+from server.services.bm25_service import create_bm25_index
+from server.services import bm25_store
+
 from server.services.upload_service import save_uploaded_file
 from server.services.pdf_service import extract_text_from_pdf
 from server.services.text_cleaner import clean_text
@@ -27,6 +30,10 @@ def process_document(file: UploadFile):
 
     # Split into chunks
     chunks = split_text_into_chunks(text)
+
+    # Create BM25 index and store in bm25_store
+    bm25_store.bm25_index = create_bm25_index(chunks)
+    bm25_store.document_chunks = chunks
 
     # Generate embeddings
     embeddings = generate_embeddings(chunks)
