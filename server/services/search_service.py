@@ -2,6 +2,8 @@ from server.services.embedding_service import generate_query_embedding
 from server.services.chroma_service import search_embeddings
 from server.services.prompt_service import build_prompt
 
+from server.services.bm25_service import bm25_search
+from server.services import bm25_store
 
 def search_documents(query: str):
     """
@@ -13,6 +15,18 @@ def search_documents(query: str):
 
     # Search ChromaDB
     results = search_embeddings(query_embedding)
+
+    if bm25_store.bm25_index is not None:
+
+        bm25_results = bm25_search(
+            query=query,
+            bm25=bm25_store.bm25_index,
+            chunks=bm25_store.document_chunks,
+            top_k=3,
+        )
+
+        for chunk in bm25_results:
+            print("-", chunk[:100])
 
     # Extract useful information
     documents = results["documents"][0]
@@ -29,6 +43,16 @@ def search_documents(query: str):
             filtered_metadatas.append(metadata)
             filtered_distances.append(distance)
 
+    # Merge Semantic + BM25
+    if bm25_store.bm25_index is not None:
+
+        hybrid_documents = list(
+            dict.fromkeys(filtered_documents + bm25_results)
+        )
+
+        for chunk in hybrid_documents:
+            print("-", chunk[:100])        
+
     if not filtered_documents:
         return {
             "prompt": None,
@@ -37,10 +61,7 @@ def search_documents(query: str):
             "distances": []
     }        
 
-    prompt = build_prompt(query, filtered_documents)
-
-    # Build prompt
-    prompt = build_prompt(query, documents)
+    prompt = build_prompt(query, hybrid_documents)
 
     return {
     "prompt": prompt,
