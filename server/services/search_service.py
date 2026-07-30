@@ -4,6 +4,7 @@ from server.services.prompt_service import build_prompt
 
 from server.services.bm25_service import bm25_search
 from server.services import bm25_store
+from server.services.reranker_service import rerank_documents
 
 def search_documents(query: str):
     """
@@ -24,9 +25,6 @@ def search_documents(query: str):
             chunks=bm25_store.document_chunks,
             top_k=3,
         )
-
-        for chunk in bm25_results:
-            print("-", chunk[:100])
 
     # Extract useful information
     documents = results["documents"][0]
@@ -50,8 +48,11 @@ def search_documents(query: str):
             dict.fromkeys(filtered_documents + bm25_results)
         )
 
-        for chunk in hybrid_documents:
-            print("-", chunk[:100])        
+        reranked_documents = rerank_documents(
+            query=query,
+            documents=hybrid_documents,
+            top_k=3,
+        )
 
     if not filtered_documents:
         return {
@@ -61,7 +62,10 @@ def search_documents(query: str):
             "distances": []
     }        
 
-    prompt = build_prompt(query, hybrid_documents)
+    prompt = build_prompt(
+        query,
+        reranked_documents,
+    )
 
     return {
     "prompt": prompt,
