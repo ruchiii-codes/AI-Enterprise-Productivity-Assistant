@@ -1,0 +1,122 @@
+[
+    {
+        "question": "What is Retrieval-Augmented Generation (RAG)?",
+        "expected_keywords": ["RAG", "external knowledge", "LLM", "vector database"]
+    },
+    {
+        "question": "Why does RAG reduce hallucinations?",
+        "expected_keywords": ["hallucinations", "external knowledge", "retrieval"]
+    },
+    {
+        "question": "What are the four components of a naive RAG pipeline?",
+        "expected_keywords": ["embedding model", "vector database", "prompt template", "LLM"]
+    },
+    {
+        "question": "Why is data preprocessing important?",
+        "expected_keywords": ["data preprocessing", "quality", "structured", "retrieval"]
+    },
+    {
+        "question": "What is data extraction?",
+        "expected_keywords": ["data extraction", "parsing", "OCR", "documents"]
+    },
+    {
+        "question": "What is data transformation?",
+        "expected_keywords": ["data transformation", "schema", "document partitioning"]
+    },
+    {
+        "question": "What is chunking?",
+        "expected_keywords": ["chunking", "smaller", "semantic", "documents"]
+    },
+    {
+        "question": "What is fixed-size chunking?",
+        "expected_keywords": ["fixed-size", "overlapping", "chunk"]
+    },
+    {
+        "question": "What is recursive chunking?",
+        "expected_keywords": ["recursive", "paragraphs", "sentences"]
+    },
+    {
+        "question": "What is semantic chunking?",
+        "expected_keywords": ["semantic", "embeddings", "cosine"]
+    },
+    {
+        "question": "What is LLM-based chunking?",
+        "expected_keywords": ["LLM", "chunking", "semantic", "propositions"]
+    },
+    {
+        "question": "What is document-based chunking?",
+        "expected_keywords": ["document", "headings", "sections"]
+    },
+    {
+        "question": "What is query transformation?",
+        "expected_keywords": ["query transformation", "rewrite", "expand"]
+    },
+    {
+        "question": "What is query rewriting?",
+        "expected_keywords": ["query rewriting", "Rewrite-Retrieve-Read", "LLM"]
+    },
+    {
+        "question": "What is query expansion?",
+        "expected_keywords": ["query expansion", "multiple queries", "retrieval"]
+    },
+    {
+        "question": "What is query decomposition?",
+        "expected_keywords": ["query decomposition", "sub-queries", "complex"]
+    },
+    {
+        "question": "Why is query decomposition useful?",
+        "expected_keywords": ["sub-queries", "parallel", "retrieval"]
+    },
+    {
+        "question": "What is query routing?",
+        "expected_keywords": ["query routing", "pipeline", "intent"]
+    },
+    {
+        "question": "What is Agentic RAG?",
+        "expected_keywords": ["Agentic RAG", "agents", "retrieval", "tools"]
+    },
+    {
+        "question": "What is metadata filtering?",
+        "expected_keywords": ["metadata", "filtering", "timestamps", "categories"]
+    },
+    {
+        "question": "Why is metadata filtering useful?",
+        "expected_keywords": ["metadata", "relevance", "retrieval"]
+    },
+    {
+        "question": "What is Hybrid Search?",
+        "expected_keywords": ["Hybrid Search", "semantic", "keyword", "alpha"]
+    },
+    {
+        "question": "What does the alpha parameter control?",
+        "expected_keywords": ["alpha", "semantic", "keyword"]
+    },
+    {
+        "question": "What are vector search outliers?",
+        "expected_keywords": ["outliers", "distance threshold", "autocut"]
+    },
+    {
+        "question": "What is embedding model fine-tuning?",
+        "expected_keywords": ["embedding", "fine-tuning", "domain", "embeddings"]
+    },
+    {
+        "question": "Why fine-tune embedding models?",
+        "expected_keywords": ["domain-specific", "retrieval", "embeddings"]
+    },
+    {
+        "question": "What is re-ranking?",
+        "expected_keywords": ["reranking", "retrieve-and-rerank", "context"]
+    },
+    {
+        "question": "What is context compression?",
+        "expected_keywords": ["compression", "retrieved", "irrelevant", "compressor"]
+    },
+    {
+        "question": "What is prompt engineering in RAG?",
+        "expected_keywords": ["prompt", "LLM", "context", "generation"]
+    },
+    {
+        "question": "What is LLM fine-tuning?",
+        "expected_keywords": ["LLM", "fine-tuning", "domain", "model"]
+    }
+]
