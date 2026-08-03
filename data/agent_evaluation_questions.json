@@ -1,0 +1,42 @@
+[
+    {
+        "question": "Hi",
+        "expected_route": "direct_llm"
+    },
+    {
+        "question": "Hello",
+        "expected_route": "direct_llm"
+    },
+    {
+        "question": "Good morning",
+        "expected_route": "direct_llm"
+    },
+    {
+        "question": "What is Hybrid Search?",
+        "expected_route": "retrieval"
+    },
+    {
+        "question": "Explain BM25",
+        "expected_route": "retrieval"
+    },
+    {
+        "question": "Summarize this PDF",
+        "expected_route": "summarization"
+    },
+    {
+        "question": "Summarize Hybrid Search",
+        "expected_route": "summarization"
+    },
+    {
+        "question": "How many PDFs have I uploaded?",
+        "expected_route": "tool"
+    },
+    {
+        "question": "Number of uploaded PDFs",
+        "expected_route": "tool"
+    },
+    {
+        "question": "Explain it in simple words",
+        "expected_route": "direct_llm"
+    }
+]

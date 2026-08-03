@@ -20,6 +20,8 @@ from server.models.chat import ChatRequest
 from server.services.search_service import search_documents
 from server.services.llm_service import generate_response
 
+from server.services.orchestrator_service import execute
+
 from server.services.memory_service import (
     clear_memory,
     load_memory,
@@ -108,7 +110,8 @@ def chat(request: ChatRequest):
     # -----------------------------
     if route == Route.RETRIEVAL:
 
-        results = search_documents(request.question)
+        from server.services.retriever_agent import retrieve
+        results = retrieve(request.question)
 
         if results["prompt"] is None:
             return {
@@ -133,8 +136,18 @@ def chat(request: ChatRequest):
     # -----------------------------
     elif route == Route.SUMMARIZATION:
 
+        from server.services.summarization_service import summarize_latest_pdf
+
+        summary = summarize_latest_pdf()
+
+        if summary is None:
+            return {
+                "answer": "No PDF has been uploaded yet.",
+                "sources": []
+            }
+
         return {
-            "answer": "Summarization Agent is coming in Sprint 10 🚀",
+            "answer": summary,
             "sources": []
         }
 
