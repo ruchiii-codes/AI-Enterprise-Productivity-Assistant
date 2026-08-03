@@ -21,3 +21,6 @@ data/chroma_db/
 
 # Memory
 data/memory/*.json
+
+# Evaluation Reports
+data/agent_evaluation_report.json
