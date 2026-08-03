@@ -1,5 +1,11 @@
 import logging
 
+from server.services.planner_service import (
+    plan_route,
+    Route,
+)
+from server.services.tool_service import count_uploaded_pdfs
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -13,6 +19,11 @@ from server.api.upload import router as upload_router
 from server.models.chat import ChatRequest
 from server.services.search_service import search_documents
 from server.services.llm_service import generate_response
+
+from server.services.memory_service import (
+    clear_memory,
+    load_memory,
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -46,6 +57,13 @@ app.add_middleware(
 # -----------------------------
 app.include_router(upload_router)
 
+@app.on_event("startup")
+def startup_event():
+
+    load_memory()
+
+    print("Conversation memory loaded.")
+
 # -----------------------------
 # Routes
 # -----------------------------
@@ -62,6 +80,15 @@ def health():
         "status": "running"
     }
 
+@app.post("/memory/clear")
+def clear_chat_memory():
+
+    clear_memory()
+
+    return {
+        "message": "Conversation memory cleared successfully."
+    }
+
 @app.post("/chat")
 def chat(request: ChatRequest):
 
@@ -72,18 +99,57 @@ def chat(request: ChatRequest):
             detail="Question cannot be empty."
         )
 
-    # Retrieve relevant documents
-    results = search_documents(request.question)
+    route = plan_route(request.question)
 
-    if results["prompt"] is None:
+    print(f"\nPlanner Route: {route.value}")
+
+    # -----------------------------
+    # Retrieval Route
+    # -----------------------------
+    if route == Route.RETRIEVAL:
+
+        results = search_documents(request.question)
+
+        if results["prompt"] is None:
+            return {
+                "answer": "I couldn't find any relevant information in the uploaded documents.",
+                "sources": []
+            }
+
+        prompt = results["prompt"]
+
+    # -----------------------------
+    # Direct LLM Route
+    # -----------------------------
+    elif route == Route.DIRECT_LLM:
+
+        prompt = request.question
+        results = {
+            "metadatas": []
+        }
+
+    # -----------------------------
+    # Temporary Routes
+    # -----------------------------
+    elif route == Route.SUMMARIZATION:
+
         return {
-            "answer": "I couldn't find any relevant information in the uploaded documents.",
+            "answer": "Summarization Agent is coming in Sprint 10 🚀",
+            "sources": []
+        }
+
+    elif route == Route.TOOL:
+
+        total_pdfs = count_uploaded_pdfs()
+
+        return {
+            "answer": f"You have uploaded {total_pdfs} PDF(s).",
             "sources": []
         }
 
     # Generate AI response
     try:
-        answer = generate_response(results["prompt"])
+        answer = generate_response(prompt)
 
     except APIConnectionError:
         raise HTTPException(
