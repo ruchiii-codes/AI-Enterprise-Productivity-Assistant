@@ -7,12 +7,6 @@ from openai import (
     APIError,
 )
 
-from server.services.memory_service import (
-    add_message,
-    get_conversation,
-    save_memory,
-)
-
 from server.config import OPENROUTER_API_KEY
 
 logger = logging.getLogger(__name__)
@@ -23,19 +17,10 @@ client = OpenAI(
 )
 
 
-def generate_response(prompt: str):
+def generate_response(messages):
 
     try:
         logger.info("Sending request to OpenRouter")
-
-        # Save current user message
-        add_message(
-            role="user",
-            content=prompt,
-        )
-
-        # Get conversation history
-        messages = get_conversation()
 
         response = client.chat.completions.create(
             model="openai/gpt-oss-20b",
@@ -43,15 +28,6 @@ def generate_response(prompt: str):
         )
 
         answer = response.choices[0].message.content
-
-        # Save assistant reply
-        add_message(
-            role="assistant",
-            content=answer,
-        )
-
-        # Save memory to file
-        save_memory()
 
         logger.info("Response received successfully")
 
