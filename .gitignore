@@ -1,16 +1,13 @@
 # Environment
 .env
 
-data/uploads/*
-!data/uploads/.gitkeep
+# Virtual Environment
+.venv/
 
 # Python cache
 __pycache__/
 *.py[cod]
 *.pyo
-
-# Virtual Environment
-.venv/
 
 # Uploaded PDFs
 data/uploads/*
@@ -19,8 +16,18 @@ data/uploads/*
 # ChromaDB
 data/chroma_db/
 
-# Memory
+# Database
+assistant.db
+*.db
+
+# Chroma
+data/chroma/*
+
+# Memory (legacy)
 data/memory/*.json
 
 # Evaluation Reports
 data/agent_evaluation_report.json
+
+# Logs
+*.log

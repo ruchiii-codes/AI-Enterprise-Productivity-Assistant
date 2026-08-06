@@ -49,10 +49,15 @@ def process_document(file: UploadFile):
     print(f"Total chunks stored: {get_collection_count()}")
 
     return {
-        "message": "File uploaded successfully.",
-        "filename": file_path.name,
-        "characters": len(text),
-        "chunks": len(chunks),
-        "embedding_count": len(embeddings),
-        "embedding_dimension": len(embeddings[0]) if len(embeddings) > 0 else 0
-    }
+    "message": "File uploaded successfully.",
+    "filename": file_path.name,
+    "file_path": str(file_path),
+    "characters": len(text),
+    "chunks": len(chunks),
+    "embedding_count": len(embeddings),
+    "embedding_dimension": (
+        len(embeddings[0])
+        if len(embeddings) > 0
+        else 0
+    ),
+}

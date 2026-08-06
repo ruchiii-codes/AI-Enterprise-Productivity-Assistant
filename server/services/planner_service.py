@@ -14,12 +14,13 @@ class Route(Enum):
 
 def plan_route(query: str) -> Route:
 
-    query = query.lower()
-
-    # Direct LLM
+    query = query.lower().strip()
 
     words = query.split()
 
+    # -----------------------------
+    # Greetings
+    # -----------------------------
     if any(
         greeting in words
         for greeting in [
@@ -40,7 +41,52 @@ def plan_route(query: str) -> Route:
     ):
         return Route.DIRECT_LLM
 
+    # -----------------------------
+    # Conversation / Memory
+    # -----------------------------
+    if any(
+        phrase in query
+        for phrase in [
+            "my name is",
+            "i am",
+            "i'm",
+            "my favorite",
+            "remember",
+            "don't forget",
+            "keep in mind",
+            "i like",
+            "i love",
+            "i prefer",
+            "i work",
+            "i study",
+            "i live",
+        ]
+    ):
+        return Route.DIRECT_LLM
+
+    # -----------------------------
+    # Follow-up questions
+    # -----------------------------
+    if any(
+        phrase in query
+        for phrase in [
+            "explain it",
+            "explain this",
+            "tell me more",
+            "more details",
+            "continue",
+            "what do you mean",
+            "in simple words",
+            "simplify",
+            "elaborate",
+            "give an example",
+        ]
+    ):
+        return Route.DIRECT_LLM
+
+    # -----------------------------
     # Summarization
+    # -----------------------------
     if any(
         word in query
         for word in [
@@ -51,7 +97,9 @@ def plan_route(query: str) -> Route:
     ):
         return Route.SUMMARIZATION
 
+    # -----------------------------
     # Tool
+    # -----------------------------
     if any(
         word in query
         for word in [
@@ -62,23 +110,45 @@ def plan_route(query: str) -> Route:
     ):
         return Route.TOOL
 
-    # Follow-up questions
+    # -----------------------------
+    # Memory Recall Questions
+    # -----------------------------
     if any(
         phrase in query
         for phrase in [
-            "explain it",
-            "explain this",
-            "tell me more",
-            "more details",
-            "in simple words",
-            "simplify",
-            "elaborate",
-            "why",
-            "how",
+            "what is my",
+            "what's my",
+            "who am i",
+            "what did i",
+            "do you remember",
+            "what was my",
+            "tell me my",
         ]
     ):
-        return Route.DIRECT_LLM
+        return Route.DIRECT_LLM    
 
+    # -----------------------------
+    # Retrieval
+    # -----------------------------
+    retrieval_keywords = [
+        "what is",
+        "what are",
+        "define",
+        "definition",
+        "explain",
+        "bm25",
+        "hybrid search",
+        "rag",
+        "embedding",
+        "vector",
+        "document",
+        "pdf",
+    ]
+
+    if any(keyword in query for keyword in retrieval_keywords):
+        return Route.RETRIEVAL
+
+    # -----------------------------
     # Default
-    return Route.RETRIEVAL
-    
+    # -----------------------------
+    return Route.DIRECT_LLM

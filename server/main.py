@@ -1,4 +1,5 @@
 import logging
+from server.services.prompt_builder import build_messages
 
 from server.services.planner_service import (
     plan_route,
@@ -22,15 +23,41 @@ from server.services.llm_service import generate_response
 
 from server.services.orchestrator_service import execute
 
-from server.services.memory_service import (
-    clear_memory,
-    load_memory,
+from server.auth.database import Base, engine
+from server.auth import models
+
+from server.api.auth import router as auth_router
+
+from fastapi import Depends
+
+from server.auth.dependencies import get_current_user
+from server.auth.models import User
+
+from server.api.conversation import (
+    router as conversation_router,
+)
+
+from server.api.message import (
+    router as message_router,
+)
+
+from sqlalchemy.orm import Session
+
+from server.auth.database import get_db
+
+from server.services.message_service import (
+    add_message,
+    get_recent_messages,
+)
+
+from server.services.conversation_service import (
+    get_conversation,
 )
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
-)
+)  
 
 # Create FastAPI application
 app = FastAPI(
@@ -58,13 +85,14 @@ app.add_middleware(
 # Register Routers
 # -----------------------------
 app.include_router(upload_router)
+app.include_router(auth_router)
+app.include_router(conversation_router)
+app.include_router(message_router)
 
 @app.on_event("startup")
 def startup_event():
 
-    load_memory()
-
-    print("Conversation memory loaded.")
+    Base.metadata.create_all(bind=engine)
 
 # -----------------------------
 # Routes
@@ -82,18 +110,27 @@ def health():
         "status": "running"
     }
 
-@app.post("/memory/clear")
-def clear_chat_memory():
-
-    clear_memory()
-
-    return {
-        "message": "Conversation memory cleared successfully."
-    }
-
 @app.post("/chat")
-def chat(request: ChatRequest):
+def chat(
+    request: ChatRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
 
+    print(f"Current User: {current_user.email}")
+
+    conversation = get_conversation(
+        db=db,
+        conversation_id=request.conversation_id,
+        user_id=current_user.id,
+    )
+
+    if conversation is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Conversation not found.",
+        )
+    
     # Validate user input
     if not request.question.strip():
         raise HTTPException(
@@ -160,10 +197,35 @@ def chat(request: ChatRequest):
             "sources": []
         }
 
+    # Load previous conversation history
+    history = get_recent_messages(
+        db=db,
+        conversation_id=request.conversation_id,
+    )
+
+    # Build OpenAI messages
+    messages = build_messages(
+        history=history,
+        current_prompt=prompt,
+    )
+
+    add_message(
+        db=db,
+        conversation_id=request.conversation_id,
+        role="user",
+        content=request.question,
+    )
+
     # Generate AI response
     try:
-        answer = generate_response(prompt)
+        answer = generate_response(messages)
 
+        add_message(
+            db=db,
+            conversation_id=request.conversation_id,
+            role="assistant",
+            content=answer,
+        )
     except APIConnectionError:
         raise HTTPException(
             status_code=503,
