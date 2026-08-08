@@ -143,58 +143,42 @@ def chat(
     print(f"\nPlanner Route: {route.value}")
 
     # -----------------------------
-    # Retrieval Route
+    # Orchestrator
     # -----------------------------
-    if route == Route.RETRIEVAL:
+    if route != Route.DIRECT_LLM:
 
-        from server.services.retriever_agent import retrieve
-        results = retrieve(request.question)
+        result = execute(
+            route=route,
+            question=request.question,
+        )
 
-        if results["prompt"] is None:
-            return {
-                "answer": "I couldn't find any relevant information in the uploaded documents.",
-                "sources": []
+        # Retrieval continues into chat flow
+        if route == Route.RETRIEVAL:
+
+            if result["prompt"] is None:
+                return {
+                    "answer": "I couldn't find any relevant information in the uploaded documents.",
+                    "sources": [],
+                }
+
+            prompt = result["prompt"]
+            results = {
+                "metadatas": result["metadatas"],
             }
-
-        prompt = results["prompt"]
+    
+        # Tool & Summarization return immediately
+        else:
+            return result
 
     # -----------------------------
-    # Direct LLM Route
+    # Direct LLM
     # -----------------------------
-    elif route == Route.DIRECT_LLM:
+    else:
 
         prompt = request.question
+
         results = {
-            "metadatas": []
-        }
-
-    # -----------------------------
-    # Temporary Routes
-    # -----------------------------
-    elif route == Route.SUMMARIZATION:
-
-        from server.services.summarization_service import summarize_latest_pdf
-
-        summary = summarize_latest_pdf()
-
-        if summary is None:
-            return {
-                "answer": "No PDF has been uploaded yet.",
-                "sources": []
-            }
-
-        return {
-            "answer": summary,
-            "sources": []
-        }
-
-    elif route == Route.TOOL:
-
-        total_pdfs = count_uploaded_pdfs()
-
-        return {
-            "answer": f"You have uploaded {total_pdfs} PDF(s).",
-            "sources": []
+            "metadatas": [],
         }
 
     # Load previous conversation history

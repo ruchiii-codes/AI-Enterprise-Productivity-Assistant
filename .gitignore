@@ -8,6 +8,7 @@
 __pycache__/
 *.py[cod]
 *.pyo
+*.pyc
 
 # Uploaded PDFs
 data/uploads/*
