@@ -26,10 +26,12 @@ def execute(route: Route, question: str):
 
     elif route == Route.TOOL:
 
-        total = count_uploaded_pdfs()
+        from server.services.tool_router import resolve_tool
+
+        result = resolve_tool(question)
 
         return {
-            "answer": f"You have uploaded {total} PDF(s).",
+            "answer": result,
             "sources": [],
         }
 

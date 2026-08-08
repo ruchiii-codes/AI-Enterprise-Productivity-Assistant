@@ -125,7 +125,26 @@ def plan_route(query: str) -> Route:
             "tell me my",
         ]
     ):
-        return Route.DIRECT_LLM    
+        return Route.DIRECT_LLM
+
+    # -----------------------------
+    # GitHub Tool
+    # -----------------------------
+    if any(
+        phrase in query
+        for phrase in [
+            "github",
+            "repository",
+            "repositories",
+            "repo",
+            "repos",
+            "pull request",
+            "pull requests",
+            "issue",
+            "issues",
+        ]
+    ):
+        return Route.TOOL     
 
     # -----------------------------
     # Retrieval
