@@ -20,6 +20,14 @@ client = OpenAI(
 def generate_response(messages):
 
     try:
+        if isinstance(messages, str):
+            messages = [
+                {
+                    "role": "user",
+                    "content": messages,
+                }
+            ]
+
         logger.info("Sending request to OpenRouter")
 
         response = client.chat.completions.create(

@@ -85,6 +85,25 @@ def plan_route(query: str) -> Route:
         return Route.DIRECT_LLM
 
     # -----------------------------
+    # Gmail Summarization
+    # -----------------------------
+    if any(
+        phrase in query
+        for phrase in [
+            "summarize my latest email",
+            "summarize latest email",
+            "summarize my latest mail",
+            "summarize latest mail",
+            "summarize my email",
+            "summarize my emails",
+            "summarize email",
+            "summarize emails",
+        ]
+    ):
+        return Route.TOOL
+
+
+    # -----------------------------
     # Summarization
     # -----------------------------
     if any(
@@ -160,6 +179,12 @@ def plan_route(query: str) -> Route:
             "inbox",
             "send email",
             "send mail",
+            "summarize email",
+            "summarize emails",
+            "summarize my email",
+            "summarize my emails",
+            "summarize latest email",
+            "summarize my latest email",
         ]
     ):
         return Route.TOOL    

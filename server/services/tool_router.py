@@ -61,6 +61,22 @@ def resolve_tool(query: str):
         return format_profile(profile)
 
     # -----------------------------
+    # Gmail Latest Email Summary
+    # -----------------------------
+    if any(
+        phrase in query
+        for phrase in [
+            "summarize my latest email",
+            "summarize my latest mail",
+            "summarize the latest email",
+            "summarize the latest mail",
+        ]
+    ):
+        from server.services.gmail_tool import gmail_summarize_latest_email
+
+        return gmail_summarize_latest_email()
+
+    # -----------------------------
     # Gmail Recent Emails
     # -----------------------------
     if any(

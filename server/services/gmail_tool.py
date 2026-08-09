@@ -5,7 +5,7 @@ from server.services.gmail_service import (
     get_message,
     send_email,
 )
-
+from server.services.summarization_service import summarize_gmail_message
 
 def gmail_get_profile():
     return get_profile()
@@ -32,3 +32,18 @@ def gmail_send_email(to, subject, body):
         subject=subject,
         body=body,
     )
+
+def gmail_summarize_message(message_id):
+    message = gmail_get_message(message_id)
+
+    return summarize_gmail_message(message)
+
+def gmail_summarize_latest_email():
+    messages = gmail_list_messages(max_results=1)
+
+    if not messages:
+        return "No emails found."
+
+    message_id = messages[0]["id"]
+
+    return gmail_summarize_message(message_id)    
