@@ -32,3 +32,6 @@ data/agent_evaluation_report.json
 
 # Logs
 *.log
+
+credentials.json
+token.json

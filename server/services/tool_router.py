@@ -21,12 +21,92 @@ from server.services.github_tool import (
     github_list_pull_requests,
 )
 
+from server.services.gmail_tool import (
+    gmail_get_profile,
+    gmail_list_messages,
+    gmail_search_messages,
+    gmail_get_message,
+)
+
+from server.services.gmail_formatter import (
+    format_profile,
+    format_messages,
+    format_message,
+)
+
+from server.services.gmail_parser import (
+    extract_gmail_search_query,
+)
+
 def resolve_tool(query: str):
     """
     Routes tool requests and formats the response.
     """
 
     query = query.lower()
+
+    # -----------------------------
+    # Gmail Profile
+    # -----------------------------
+    if any(
+        phrase in query
+        for phrase in [
+            "gmail profile",
+            "my gmail account",
+            "my email account",
+        ]
+    ):
+        profile = gmail_get_profile()
+
+        return format_profile(profile)
+
+    # -----------------------------
+    # Gmail Recent Emails
+    # -----------------------------
+    if any(
+        phrase in query
+        for phrase in [
+            "recent emails",
+            "latest emails",
+            "recent mails",
+            "latest mails",
+            "show my emails",
+            "show my mails",
+        ]
+    ):
+        messages = gmail_list_messages(
+            max_results=10
+        )
+
+        return format_messages(messages)
+
+    # -----------------------------
+    # Gmail Search
+    # -----------------------------
+    if any(
+        phrase in query
+        for phrase in [
+            "find emails",
+            "search emails",
+            "find mails",
+            "search mails",
+            "emails from",
+            "emails about",
+            "mail from",
+            "mail about",
+        ]
+    ):
+        search_query = extract_gmail_search_query(query)
+
+        if search_query is None:
+            return "Please specify what emails you want to search for."
+
+        messages = gmail_search_messages(
+            query=search_query,
+            max_results=10,
+        )
+
+        return format_messages(messages)
 
     # -----------------------------
     # GitHub User

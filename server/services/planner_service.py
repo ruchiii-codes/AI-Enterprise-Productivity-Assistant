@@ -147,6 +147,24 @@ def plan_route(query: str) -> Route:
         return Route.TOOL     
 
     # -----------------------------
+    # Gmail Tool
+    # -----------------------------
+    if any(
+        phrase in query
+        for phrase in [
+            "gmail",
+            "email",
+            "emails",
+            "mail",
+            "mails",
+            "inbox",
+            "send email",
+            "send mail",
+        ]
+    ):
+        return Route.TOOL    
+
+    # -----------------------------
     # Retrieval
     # -----------------------------
     retrieval_keywords = [
