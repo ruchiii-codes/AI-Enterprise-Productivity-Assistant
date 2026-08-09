@@ -76,6 +76,40 @@ Summarize the following information.
     return generate_response(prompt)
 
 
+def summarize_gmail_message(message: dict):
+    """
+    Summarizes a Gmail message.
+    """
+
+    subject = message.get("subject") or "No Subject"
+    sender = message.get("from") or "Unknown"
+    body = message.get("body") or ""
+
+    if not body.strip():
+        return None
+
+    prompt = f"""
+You are an AI assistant.
+
+Summarize the following email.
+
+Include:
+1. Main purpose
+2. Important points
+3. Required action, if any
+4. Key dates or deadlines, if mentioned
+
+Email:
+
+From: {sender}
+Subject: {subject}
+
+{body}
+"""
+
+    return generate_response(prompt)    
+
+
 def summarize(question: str):
     """
     Smart Summarizer Agent.

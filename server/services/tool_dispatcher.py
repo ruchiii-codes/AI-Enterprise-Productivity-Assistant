@@ -9,6 +9,8 @@ from server.services.gmail_tool import (
     gmail_search_messages,
     gmail_get_message,
     gmail_send_email,
+    gmail_summarize_message,
+    gmail_summarize_latest_email,
 )
 
 
@@ -75,6 +77,14 @@ def dispatch_tool(tool: str, action: str, params=None):
                 subject=params.get("subject"),
                 body=params.get("body"),
             )
+
+        if action == "summarize_message":
+            return gmail_summarize_message(
+                message_id=params.get("message_id")
+            )
+
+        if action == "summarize_latest":
+            return gmail_summarize_latest_email()
 
     raise ValueError(
         f"Unknown tool/action: {tool}/{action}"
