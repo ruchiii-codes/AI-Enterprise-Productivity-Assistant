@@ -1,6 +1,6 @@
 from googleapiclient.discovery import build
 
-from server.services.gmail_auth import get_gmail_credentials
+from server.services.integrations.gmail.gmail_auth import get_gmail_credentials
 
 from email.mime.text import MIMEText
 import base64

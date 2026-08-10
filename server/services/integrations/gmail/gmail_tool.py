@@ -1,4 +1,4 @@
-from server.services.gmail_service import (
+from server.services.integrations.gmail.gmail_service import (
     get_profile,
     list_messages,
     search_messages,
