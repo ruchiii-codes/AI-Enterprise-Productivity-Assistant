@@ -1,16 +1,16 @@
-from server.services.github_service import (
+from server.services.integrations.github.github_service import (
     get_authenticated_user,
     list_repositories,
 )
 
-from server.services.github_service import get_repository
+from server.services.integrations.github.github_service import get_repository
 
-from server.services.github_service import (
+from server.services.integrations.github.github_service import (
     list_issues,
     create_issue,
 )
 
-from server.services.github_service import list_pull_requests
+from server.services.integrations.github.github_service import list_pull_requests
 
 def github_get_user():
     """
