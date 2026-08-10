@@ -28,7 +28,7 @@ from server.services.integrations.gmail.gmail_tool import (
     gmail_get_message,
 )
 
-from server.services.calendar_tool import (
+from server.services.integrations.calendar.calendar_tool import (
     calendar_get_upcoming_events,
     calendar_search_events,
     calendar_create_event,
@@ -186,7 +186,7 @@ def resolve_tool(query: str):
             "create an event",
         ]
     ):
-        from server.services.calendar_tool import calendar_create_from_query
+        from server.services.integrations.calendar.calendar_tool import calendar_create_from_query
 
         return calendar_create_from_query(query)
 

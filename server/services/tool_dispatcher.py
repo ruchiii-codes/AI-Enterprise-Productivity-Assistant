@@ -13,7 +13,7 @@ from server.services.integrations.gmail.gmail_tool import (
     gmail_summarize_latest_email,
 )
 
-from server.services.calendar_tool import (
+from server.services.integrations.calendar.calendar_tool import (
     calendar_get_upcoming_events,
     calendar_search_events,
     calendar_create_event,

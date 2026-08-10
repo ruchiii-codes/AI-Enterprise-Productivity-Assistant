@@ -16,23 +16,49 @@ def parse_calendar_create_query(query):
     else:
         title = "Event"
 
-    # Detect "tomorrow"
+    # Detect event date
     if "tomorrow" in query_lower:
         event_date = datetime.now().date() + timedelta(days=1)
+
     elif "today" in query_lower:
         event_date = datetime.now().date()
+
     else:
         event_date = None
+
+        # Try to extract an explicit date such as:
+        # August 11, 2026
+        # Aug 11, 2026
+        try:
+            date_match = re.search(
+                r"\b(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|"
+                r"may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|"
+                r"oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)"
+                r"\s+\d{1,2}(?:st|nd|rd|th)?(?:,\s*|\s+)\d{4}\b",
+                query,
+                re.IGNORECASE,
+            )
+
+            if date_match:
+                event_date = date_parser.parse(
+                    date_match.group(0),
+                    fuzzy=True,
+                ).date()
+
+        except (ValueError, TypeError):
+            event_date = None
 
     # Find times such as:
     # 3 PM
     # 3:00 PM
     # 15:00
-    times = re.findall(
-        r"\b\d{1,2}(?::\d{2})?\s*(?:am|pm)?\b",
+    time_matches = re.findall(
+        r"\b\d{1,2}(?::\d{2})?\s*(?:am|pm)\b|\b\d{1,2}:\d{2}\b|\b(?:[01]?\d|2[0-3]):[0-5]\d\b",
         query,
         re.IGNORECASE,
     )
+
+    times = [match.strip() for match in time_matches]
 
     if not times:
         return None
