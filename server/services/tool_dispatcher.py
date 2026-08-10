@@ -3,7 +3,7 @@ from server.services.integrations.github.github_tool import (
     github_list_repositories,
 )
 
-from server.services.gmail_tool import (
+from server.services.integrations.gmail.gmail_tool import (
     gmail_get_profile,
     gmail_list_messages,
     gmail_search_messages,

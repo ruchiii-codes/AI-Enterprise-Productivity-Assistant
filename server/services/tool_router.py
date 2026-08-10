@@ -21,7 +21,7 @@ from server.services.integrations.github.github_tool import (
     github_list_pull_requests,
 )
 
-from server.services.gmail_tool import (
+from server.services.integrations.gmail.gmail_tool import (
     gmail_get_profile,
     gmail_list_messages,
     gmail_search_messages,
@@ -34,13 +34,13 @@ from server.services.calendar_tool import (
     calendar_create_event,
 )
 
-from server.services.gmail_formatter import (
+from server.services.integrations.gmail.gmail_formatter import (
     format_profile,
     format_messages,
     format_message,
 )
 
-from server.services.gmail_parser import (
+from server.services.integrations.gmail.gmail_parser import (
     extract_gmail_search_query,
 )
 
@@ -78,7 +78,7 @@ def resolve_tool(query: str):
             "summarize the latest mail",
         ]
     ):
-        from server.services.gmail_tool import gmail_summarize_latest_email
+        from server.services.integrations.gmail.gmail_tool import gmail_summarize_latest_email
 
         return gmail_summarize_latest_email()
 
