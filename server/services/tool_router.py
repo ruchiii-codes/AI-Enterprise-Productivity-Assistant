@@ -28,6 +28,12 @@ from server.services.gmail_tool import (
     gmail_get_message,
 )
 
+from server.services.calendar_tool import (
+    calendar_get_upcoming_events,
+    calendar_search_events,
+    calendar_create_event,
+)
+
 from server.services.gmail_formatter import (
     format_profile,
     format_messages,
@@ -125,6 +131,67 @@ def resolve_tool(query: str):
         return format_messages(messages)
 
     # -----------------------------
+    # Calendar - Upcoming Events
+    # -----------------------------
+    if any(
+        phrase in query
+        for phrase in [
+            "upcoming events",
+            "upcoming meetings",
+            "upcoming appointments",
+            "show my calendar",
+            "show my upcoming meetings",
+            "show my upcoming events",
+        ]
+    ):
+        return calendar_get_upcoming_events(max_results=10)
+
+    # -----------------------------
+    # Calendar - Search Events
+    # -----------------------------
+    if any(
+        phrase in query
+        for phrase in [
+            "find my meeting",
+            "find my meetings",
+            "find my event",
+            "find my events",
+            "find meeting",
+            "find meetings",
+            "find event",
+            "find events",
+            "find my interview",
+            "find interview",
+            "search my calendar",
+            "search calendar",
+        ]
+    ):
+        search_query = query
+
+        return calendar_search_events(
+            query=search_query,
+            max_results=10,
+        )  
+
+    # -----------------------------
+    # Calendar - Create Event
+    # -----------------------------
+    if any(
+        phrase in query
+        for phrase in [
+            "schedule a meeting",
+            "schedule a meeting",
+            "schedule an event",
+            "create a meeting",
+            "create an event",
+        ]
+    ):
+        from server.services.calendar_tool import calendar_create_from_query
+
+        return calendar_create_from_query(query)
+
+
+    # -----------------------------
     # GitHub User
     # -----------------------------
     if "who am i on github" in query:
@@ -152,7 +219,6 @@ def resolve_tool(query: str):
         )
 
         return format_repository_details(repository)
-
 
     # -----------------------------
     # Create Issue

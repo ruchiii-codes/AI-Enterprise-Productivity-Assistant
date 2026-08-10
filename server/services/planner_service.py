@@ -188,6 +188,49 @@ def plan_route(query: str) -> Route:
         ]
     ):
         return Route.TOOL    
+    
+    # -----------------------------
+    # Calendar Tool
+    # -----------------------------
+    if any(
+        phrase in query
+        for phrase in [
+            "calendar",
+            "upcoming events",
+            "upcoming meetings",
+            "upcoming appointments",
+            "show my calendar",
+            "show my upcoming meetings",
+            "show my upcoming events",
+            "find my meeting",
+            "find my meetings",
+            "find my event",
+            "find my events",
+            "find meeting",
+            "find event",
+            "search my calendar",
+            "search calendar",
+            "schedule a meeting",
+            "schedule an event",
+            "create a meeting",
+            "create an event",
+        ]
+    ) or (
+        "find" in query
+        and any(
+            word in query
+            for word in [
+                "meeting",
+                "meetings",
+                "event",
+                "events",
+                "interview",
+                "appointment",
+                "appointments",
+            ]
+        )
+    ):
+        return Route.TOOL
 
     # -----------------------------
     # Retrieval

@@ -13,6 +13,11 @@ from server.services.gmail_tool import (
     gmail_summarize_latest_email,
 )
 
+from server.services.calendar_tool import (
+    calendar_get_upcoming_events,
+    calendar_search_events,
+    calendar_create_event,
+)
 
 def dispatch_tool(tool: str, action: str, params=None):
     """
@@ -85,6 +90,32 @@ def dispatch_tool(tool: str, action: str, params=None):
 
         if action == "summarize_latest":
             return gmail_summarize_latest_email()
+
+
+    # -----------------------------
+    # Calendar
+    # -----------------------------
+    if tool == "calendar":
+
+        if action == "upcoming_events":
+            return calendar_get_upcoming_events(
+                max_results=params.get("max_results", 10)
+            )
+
+        if action == "search_events":
+            return calendar_search_events(
+                query=params.get("query", ""),
+                max_results=params.get("max_results", 10)
+            )
+
+        if action == "create_event":
+            return calendar_create_event(
+                summary=params.get("summary"),
+                start_datetime=params.get("start_datetime"),
+                end_datetime=params.get("end_datetime"),
+                description=params.get("description"),
+                location=params.get("location"),
+            )
 
     raise ValueError(
         f"Unknown tool/action: {tool}/{action}"
