@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 from googleapiclient.discovery import build
 
-from server.services.calendar_auth import get_calendar_credentials
+from server.services.integrations.calendar.calendar_auth import get_calendar_credentials
 
 
 def get_calendar_service():

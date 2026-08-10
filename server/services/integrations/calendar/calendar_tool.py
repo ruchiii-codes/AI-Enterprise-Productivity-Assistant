@@ -1,10 +1,10 @@
-from server.services.calendar_service import (
+from server.services.integrations.calendar.calendar_service import (
     get_upcoming_events,
     search_events,
     create_event,
 )
-from server.services.calendar_formatter import format_events
-from server.services.calendar_parser import parse_calendar_create_query
+from server.services.integrations.calendar.calendar_formatter import format_events
+from server.services.integrations.calendar.calendar_parser import parse_calendar_create_query
 from datetime import datetime
 
 def calendar_get_upcoming_events(max_results=10):
