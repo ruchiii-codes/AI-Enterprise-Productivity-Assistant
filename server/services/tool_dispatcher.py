@@ -1,4 +1,4 @@
-from server.services.github_tool import (
+from server.services.integrations.github.github_tool import (
     github_get_user,
     github_list_repositories,
 )

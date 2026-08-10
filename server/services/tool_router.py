@@ -1,11 +1,11 @@
-from server.services.github_tool import github_get_owner
+from server.services.integrations.github.github_tool import github_get_owner
 from server.services.tool_dispatcher import dispatch_tool
-from server.services.github_parser import extract_repository_name
-from server.services.github_issue_parser import extract_issue_title
-from server.services.github_tool import github_create_issue
-from server.services.github_formatter import format_created_issue
+from server.services.integrations.github.github_parser import extract_repository_name
+from server.services.integrations.github.github_issue_parser import extract_issue_title
+from server.services.integrations.github.github_tool import github_create_issue
+from server.services.integrations.github.github_formatter import format_created_issue
 
-from server.services.github_formatter import (
+from server.services.integrations.github.github_formatter import (
     format_repositories,
     format_repository_details,
     format_issues,
@@ -13,7 +13,7 @@ from server.services.github_formatter import (
     format_created_issue,
 )
 
-from server.services.github_tool import (
+from server.services.integrations.github.github_tool import (
     github_get_user,
     github_list_repositories,
     github_repository_details,
