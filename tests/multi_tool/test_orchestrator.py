@@ -54,7 +54,7 @@ def test_orchestrator_uses_multi_tool_flow():
         "server.services.orchestrator_service.select_tools",
         return_value=selected_tools,
     ), patch(
-        "server.services.orchestrator_service.execute_multiple_tools",
+        "server.services.orchestrator_service.execute_mcp_tools",
         return_value=expected_results,
     ):
 

@@ -6,6 +6,7 @@ from server.services.tool_service import count_uploaded_pdfs
 from server.services.multi_tool.tool_selector import select_tools
 from server.services.multi_tool.multi_tool_executor import execute_multiple_tools
 from server.services.multi_tool.result_formatter import format_multi_tool_results
+from server.services.mcp.mcp_orchestrator import execute_mcp_tools
 
 
 def execute(route: Route, question: str):
@@ -44,7 +45,7 @@ def execute(route: Route, question: str):
             }
 
         # Multiple tools detected
-        results = execute_multiple_tools(selected_tools)
+        results = execute_mcp_tools(selected_tools)
 
         formatted_results = format_multi_tool_results(results)
 

@@ -18,9 +18,7 @@ from server.services.integrations.github.github_tool import (
 
 def select_tools(question: str) -> list[ToolCall]:
     """
-    Select one or more tools based on keywords in the user's question.
-
-    This is the first deterministic version of multi-tool selection.
+    Select one or more tools from natural-language user requests.
     """
 
     question_lower = question.lower()
@@ -30,16 +28,21 @@ def select_tools(question: str) -> list[ToolCall]:
     # -------------------------
     # Gmail
     # -------------------------
-    if any(
-        keyword in question_lower
-        for keyword in [
-            "email",
-            "emails",
-            "mail",
-            "mails",
-            "inbox",
-        ]
-    ):
+    gmail_keywords = [
+        "email",
+        "emails",
+        "mail",
+        "mails",
+        "inbox",
+        "gmail",
+        "message",
+        "messages",
+        "unread",
+        "received",
+        "sent email",
+    ]
+
+    if any(keyword in question_lower for keyword in gmail_keywords):
         tool_calls.append(
             ToolCall(
                 tool=gmail_list_messages,
@@ -50,17 +53,23 @@ def select_tools(question: str) -> list[ToolCall]:
     # -------------------------
     # Calendar
     # -------------------------
-    if any(
-        keyword in question_lower
-        for keyword in [
-            "calendar",
-            "meeting",
-            "meetings",
-            "event",
-            "events",
-            "schedule",
-        ]
-    ):
+    calendar_keywords = [
+        "calendar",
+        "meeting",
+        "meetings",
+        "event",
+        "events",
+        "schedule",
+        "appointment",
+        "appointments",
+        "upcoming",
+        "agenda",
+        "availability",
+        "planned",
+        "plan",
+    ]
+
+    if any(keyword in question_lower for keyword in calendar_keywords):
         tool_calls.append(
             ToolCall(
                 tool=calendar_get_upcoming_events,
@@ -71,18 +80,19 @@ def select_tools(question: str) -> list[ToolCall]:
     # -------------------------
     # GitHub
     # -------------------------
-    if any(
-        keyword in question_lower
-        for keyword in [
-            "github",
-            "repository",
-            "repositories",
-            "repo",
-            "repos",
-            "pull request",
-            "pull requests",
-        ]
-    ):
+    github_keywords = [
+        "github",
+        "repository",
+        "repositories",
+        "repo",
+        "repos",
+        "pull request",
+        "pull requests",
+        "pulls",
+        "code repository",
+    ]
+
+    if any(keyword in question_lower for keyword in github_keywords):
         tool_calls.append(
             ToolCall(
                 tool=github_list_repositories,
