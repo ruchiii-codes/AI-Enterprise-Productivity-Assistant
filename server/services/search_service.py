@@ -1,30 +1,70 @@
 from server.services.embedding_service import generate_query_embedding
-from server.services.chroma_service import search_embeddings
+from server.services.chroma_service import (
+    search_embeddings,
+    get_parent_documents,
+)
 from server.services.prompt_service import build_prompt
 
 from server.services.bm25_service import bm25_search
 from server.services import bm25_store
 from server.services.reranker_service import rerank_documents
-
+from server.services.query_rewrite_service import rewrite_query
+from server.services.multi_query_service import generate_multi_queries
+from server.services.hyde_service import generate_hypothetical_document
+from server.services.context_compression_service import compress_context
 
 def search_documents(query: str):
     """
     Search relevant documents and build a prompt for the LLM.
     """
 
-    # Generate embedding
-    query_embedding = generate_query_embedding(query)
+    # Rewrite query for better retrieval
+    rewritten_query = rewrite_query(query)
+    multi_queries = generate_multi_queries(rewritten_query)
+    hypothetical_document = generate_hypothetical_document(rewritten_query)
+   
+    # Generate embedding from rewritten query
+    all_documents = []
+    all_metadatas = []
+    all_distances = []
 
-    # Semantic Search
-    results = search_embeddings(query_embedding)
+    for search_query in multi_queries:
+        query_embedding = generate_query_embedding(search_query)
 
-    documents = results["documents"][0]
-    metadatas = results["metadatas"][0]
-    distances = results["distances"][0]
+        results = search_embeddings(query_embedding)
 
-    filtered_documents = []
-    filtered_metadatas = []
-    filtered_distances = []
+        results = get_parent_documents(results)
+
+        all_documents.extend(results["documents"][0])
+        all_metadatas.extend(results["metadatas"][0])
+        all_distances.extend(results["distances"][0])
+
+        
+    # HyDE retrieval
+    hyde_embedding = generate_query_embedding(hypothetical_document)
+
+    hyde_results = search_embeddings(hyde_embedding)
+
+    hyde_results = get_parent_documents(hyde_results)
+
+    all_documents.extend(hyde_results["documents"][0])
+    all_metadatas.extend(hyde_results["metadatas"][0])
+    all_distances.extend(hyde_results["distances"][0])
+
+    # Remove duplicate documents
+    unique_results = {}
+
+    for document, metadata, distance in zip(
+        all_documents,
+        all_metadatas,
+        all_distances,
+    ):
+        if document not in unique_results:
+            unique_results[document] = (metadata, distance)
+
+    documents = list(unique_results.keys())
+    metadatas = [item[0] for item in unique_results.values()]
+    distances = [item[1] for item in unique_results.values()]
 
     for document, metadata, distance in zip(
         documents,
@@ -51,10 +91,15 @@ def search_documents(query: str):
     if bm25_store.bm25_index is not None:
 
         bm25_results = bm25_search(
-            query=query,
+            query=rewritten_query,
             bm25=bm25_store.bm25_index,
             chunks=bm25_store.document_chunks,
             top_k=3,
+        )
+
+        compressed_context = compress_context(
+            rewritten_query,
+            final_documents,
         )
 
         hybrid_documents = list(
@@ -62,14 +107,14 @@ def search_documents(query: str):
         )
 
         final_documents = rerank_documents(
-            query=query,
+            query=rewritten_query,
             documents=hybrid_documents,
             top_k=3,
         )
 
     prompt = build_prompt(
         query,
-        final_documents,
+        [compressed_context],
     )
 
     return {
