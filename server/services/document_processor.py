@@ -12,6 +12,7 @@ from server.services.chroma_service import (
     store_embeddings,
     get_collection_count,
 )
+from server.services.parent_child_service import create_parent_child_chunks
 
 
 def process_document(file: UploadFile):
@@ -28,32 +29,45 @@ def process_document(file: UploadFile):
     # Clean text
     text = clean_text(text)
 
-    # Split into chunks
-    chunks = split_text_into_chunks(text)
+    # Create parent-child chunks
+    parent_child_pairs = create_parent_child_chunks(text)
+
+    # Child chunks are used for retrieval
+    child_chunks = [
+        item["child"]
+        for item in parent_child_pairs
+    ]
+
+    # Parent chunks are kept for returning broader context
+    parent_chunks = [
+        item["parent"]
+        for item in parent_child_pairs
+    ]
 
     # Create BM25 index and store in bm25_store
-    bm25_store.bm25_index = create_bm25_index(chunks)
-    bm25_store.document_chunks = chunks
+    bm25_store.bm25_index = create_bm25_index(child_chunks)
+    bm25_store.document_chunks = child_chunks
 
     # Generate embeddings
-    embeddings = generate_embeddings(chunks)
+    embeddings = generate_embeddings(child_chunks)
 
     # Store embeddings in ChromaDB
     store_embeddings(
-        chunks=chunks,
+        chunks=child_chunks,
         embeddings=embeddings,
-        filename=file_path.name
+        filename=file_path.name,
+        parent_chunks=parent_chunks,
     )
 
     # Print total stored chunks
     print(f"Total chunks stored: {get_collection_count()}")
 
-    return {
+    return { 
     "message": "File uploaded successfully.",
     "filename": file_path.name,
     "file_path": str(file_path),
     "characters": len(text),
-    "chunks": len(chunks),
+    "chunks": len(child_chunks),
     "embedding_count": len(embeddings),
     "embedding_dimension": (
         len(embeddings[0])
