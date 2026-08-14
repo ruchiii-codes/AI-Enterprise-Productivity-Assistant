@@ -1,17 +1,19 @@
+import os
 from datetime import datetime, timedelta, timezone
 
+from dotenv import load_dotenv
 from jose import jwt
 from passlib.context import CryptContext
 
+load_dotenv()
 
-SECRET_KEY = (
-    "change-this-to-a-long-random-secret-key"
-)
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+
+if not SECRET_KEY:
+    raise RuntimeError("JWT_SECRET_KEY is not configured")
 
 ALGORITHM = "HS256"
-
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
-
 
 pwd_context = CryptContext(
     schemes=["bcrypt"],

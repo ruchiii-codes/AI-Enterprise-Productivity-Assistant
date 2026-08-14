@@ -1,4 +1,5 @@
 import logging
+import time
 from server.services.prompt_builder import build_messages
 
 from server.services.planner_service import (
@@ -7,7 +8,7 @@ from server.services.planner_service import (
 )
 from server.services.tool_service import count_uploaded_pdfs
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from openai import (
@@ -54,10 +55,17 @@ from server.services.conversation_service import (
     get_conversation,
 )
 
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+
+from server.utils.rate_limiter import limiter
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
 )  
+logger = logging.getLogger(__name__)
 
 # Create FastAPI application
 app = FastAPI(
@@ -65,6 +73,44 @@ app = FastAPI(
     description="Backend API for the AI Enterprise Productivity Assistant",
     version="1.0.0"
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(
+    RateLimitExceeded,
+    _rate_limit_exceeded_handler,
+)
+app.add_middleware(SlowAPIMiddleware)
+
+@app.middleware("http")
+async def request_monitoring(request: Request, call_next):
+    start_time = time.perf_counter()
+
+    try:
+        response = await call_next(request)
+
+        duration = time.perf_counter() - start_time
+
+        logger.info(
+            "HTTP %s %s - %s - %.3fs",
+            request.method,
+            request.url.path,
+            response.status_code,
+            duration,
+        )
+
+        return response
+
+    except Exception:
+        duration = time.perf_counter() - start_time
+
+        logger.exception(
+            "HTTP %s %s failed after %.3fs",
+            request.method,
+            request.url.path,
+            duration,
+        )
+
+        raise
 
 # -----------------------------
 # CORS Configuration
@@ -77,8 +123,17 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=[
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "OPTIONS",
+    ],
+    allow_headers=[
+        "Authorization",
+        "Content-Type",
+    ],
 )
 
 # -----------------------------
@@ -111,17 +166,19 @@ def health():
     }
 
 @app.post("/chat")
+@limiter.limit("30/minute")
 def chat(
-    request: ChatRequest,
+    request: Request,
+    chat_request: ChatRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
 
-    print(f"Current User: {current_user.email}")
+    logger.info("Authenticated request from user: %s", current_user.email)
 
     conversation = get_conversation(
         db=db,
-        conversation_id=request.conversation_id,
+        conversation_id=chat_request.conversation_id,
         user_id=current_user.id,
     )
 
@@ -132,15 +189,15 @@ def chat(
         )
     
     # Validate user input
-    if not request.question.strip():
+    if not chat_request.question.strip():
         raise HTTPException(
             status_code=400,
             detail="Question cannot be empty."
         )
 
-    route = plan_route(request.question)
+    route = plan_route(chat_request.question)
 
-    print(f"\nPlanner Route: {route.value}")
+    logger.info("Planner Route selected: %s", route.value)
 
     # -----------------------------
     # Orchestrator
@@ -149,7 +206,7 @@ def chat(
 
         result = execute(
             route=route,
-            question=request.question,
+            question=chat_request.question,
         )
 
         # Retrieval continues into chat flow
@@ -175,7 +232,7 @@ def chat(
     # -----------------------------
     else:
 
-        prompt = request.question
+        prompt = chat_request.question
 
         results = {
             "metadatas": [],
@@ -184,7 +241,7 @@ def chat(
     # Load previous conversation history
     history = get_recent_messages(
         db=db,
-        conversation_id=request.conversation_id,
+        conversation_id=chat_request.conversation_id,
     )
 
     # Build OpenAI messages
@@ -195,9 +252,9 @@ def chat(
 
     add_message(
         db=db,
-        conversation_id=request.conversation_id,
+        conversation_id=chat_request.conversation_id,
         role="user",
-        content=request.question,
+        content=chat_request.question,
     )
 
     # Generate AI response
