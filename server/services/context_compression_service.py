@@ -37,4 +37,4 @@ Compressed context:
 
     response = generate_response(prompt)
 
-    return response.strip()
+    return response.strip() if response else ""

@@ -9,10 +9,10 @@ from server.services.multi_tool.result_formatter import format_multi_tool_result
 from server.services.mcp.mcp_orchestrator import execute_mcp_tools
 
 
-def execute(route: Route, question: str):
+def execute(route: Route, question: str, history=None):
 
     if route == Route.RETRIEVAL:
-        return retrieve(question)
+        return retrieve(question, history=history)
 
     elif route == Route.SUMMARIZATION:
 

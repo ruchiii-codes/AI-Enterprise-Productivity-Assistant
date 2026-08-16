@@ -12,9 +12,13 @@ def extract_repository_name(query: str):
         r"repository details of (.+)",
         r"details of (.+)",
         r"issues for (.+)",
+        r"issues in (.+)",
+        r"issues of (.+)",
         r"pull requests for (.+)",
+        r"pull requests in (.+)",
+        r"pull requests of (.+)",
         r"repository (.+)",
-
+    
         r"create an issue in (.+?) titled",
         r"create issue in (.+?) titled",
         r"open an issue in (.+?) titled",
@@ -31,6 +35,6 @@ def extract_repository_name(query: str):
 
         if match:
 
-            return match.group(1).strip()
+            return match.group(1).strip().rstrip("?.!,")
 
     return None

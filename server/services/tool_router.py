@@ -142,10 +142,19 @@ def resolve_tool(query: str):
             "show my calendar",
             "show my upcoming meetings",
             "show my upcoming events",
+            "What events do I have on my calendar",
+            "what events do i have on my calendar",
+            "events do i have on my calendar",
+            "my calendar events",
         ]
     ):
-        return calendar_get_upcoming_events(max_results=10)
+        events = calendar_get_upcoming_events(max_results=10)
 
+        if not events:
+            return "You don't have any upcoming events on your calendar."
+
+        return events
+    
     # -----------------------------
     # Calendar - Search Events
     # -----------------------------

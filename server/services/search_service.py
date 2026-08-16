@@ -13,13 +13,16 @@ from server.services.multi_query_service import generate_multi_queries
 from server.services.hyde_service import generate_hypothetical_document
 from server.services.context_compression_service import compress_context
 
-def search_documents(query: str):
+def search_documents(query: str, history=None):
     """
     Search relevant documents and build a prompt for the LLM.
     """
 
     # Rewrite query for better retrieval
-    rewritten_query = rewrite_query(query)
+    rewritten_query = rewrite_query(
+        query,
+        history=history,
+    )    
     multi_queries = generate_multi_queries(rewritten_query)
     hypothetical_document = generate_hypothetical_document(rewritten_query)
    
@@ -66,12 +69,16 @@ def search_documents(query: str):
     metadatas = [item[0] for item in unique_results.values()]
     distances = [item[1] for item in unique_results.values()]
 
+    filtered_documents = []
+    filtered_metadatas = []
+    filtered_distances = []
+
     for document, metadata, distance in zip(
         documents,
         metadatas,
         distances,
     ):
-        if distance < 0.7:
+        if distance < 1.8:
             filtered_documents.append(document)
             filtered_metadatas.append(metadata)
             filtered_distances.append(distance)
@@ -87,6 +94,13 @@ def search_documents(query: str):
     # Default (semantic only)
     final_documents = filtered_documents
 
+    print("\n" + "=" * 80)
+    print("AFTER DISTANCE FILTER")
+    print("=" * 80)
+    for doc in final_documents:
+        print(doc[:500])
+    print("=" * 80)
+
     # Hybrid Search
     if bm25_store.bm25_index is not None:
 
@@ -95,11 +109,6 @@ def search_documents(query: str):
             bm25=bm25_store.bm25_index,
             chunks=bm25_store.document_chunks,
             top_k=3,
-        )
-
-        compressed_context = compress_context(
-            rewritten_query,
-            final_documents,
         )
 
         hybrid_documents = list(
@@ -111,6 +120,35 @@ def search_documents(query: str):
             documents=hybrid_documents,
             top_k=3,
         )
+
+        print("\n" + "=" * 80)
+        print("AFTER RERANKING")
+        print("=" * 80)
+        for doc in final_documents:
+            print(doc[:500])
+        print("=" * 80)
+
+    # Context compression
+    compressed_context = compress_context(
+        rewritten_query,
+        final_documents,
+    )
+    
+    # If context compression could not produce useful context,
+    # treat the retrieval as unsuccessful.
+    if not compressed_context or not compressed_context.strip():
+        return {
+            "prompt": None,
+            "documents": [],
+            "metadatas": [],
+            "distances": [],
+        }  
+
+    print("\n" + "=" * 80)
+    print("FINAL RETRIEVED CONTEXT")
+    print("=" * 80)
+    print(compressed_context)
+    print("=" * 80 + "\n")
 
     prompt = build_prompt(
         query,
