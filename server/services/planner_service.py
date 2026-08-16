@@ -12,9 +12,26 @@ class Route(Enum):
     TOOL = "tool"
 
 
-def plan_route(query: str) -> Route:
+def plan_route(query: str, history=None) -> Route:
 
     query = query.lower().strip()
+
+    # -----------------------------
+    # Context-aware follow-ups
+    # -----------------------------
+    if history and any(
+        phrase in query
+        for phrase in [
+            "where is it used",
+            "where is this used",
+            "how is it used",
+            "how does it work",
+            "how does this work",
+            "where does it fit",
+            "where is this implemented",
+        ]
+    ):
+        return Route.RETRIEVAL
 
     words = query.split()
 
@@ -124,7 +141,6 @@ def plan_route(query: str) -> Route:
         for word in [
             "how many pdf",
             "number of pdf",
-            "uploaded pdf",
         ]
     ):
         return Route.TOOL
@@ -235,24 +251,44 @@ def plan_route(query: str) -> Route:
     # -----------------------------
     # Retrieval
     # -----------------------------
+    # Route to RAG when the user is explicitly
+    # asking about their uploaded/project knowledge.
     retrieval_keywords = [
-        "what is",
-        "what are",
-        "define",
-        "definition",
-        "explain",
-        "bm25",
-        "hybrid search",
-        "rag",
-        "embedding",
-        "vector",
-        "document",
-        "pdf",
+        "my project",
+        "my ai enterprise productivity assistant",
+        "ai enterprise productivity assistant",
+        "workmind",
+        "my document",
+        "my documents",
+        "my pdf",
+        "my pdfs",
+        "uploaded document",
+        "uploaded documents",
+        "uploaded pdf",
+        "uploaded pdfs",
+        "this document",
+        "this pdf",
+        "this project",
+        "according to the document",
+        "according to the pdf",
+        "according to my document",
+        "according to my pdf",
+        "what does the document say",
+        "what does the pdf say",
+        "what does my document say",
+        "what does my pdf say",
+        "technologies used in my",
+        "technology stack of my",
+        "architecture of my",
+        "folder structure of my",
+        "project structure of my",
+        "advanced rag techniques in my",
+        "implemented in my project",
     ]
-
+    
     if any(keyword in query for keyword in retrieval_keywords):
         return Route.RETRIEVAL
-
+    
     # -----------------------------
     # Default
     # -----------------------------

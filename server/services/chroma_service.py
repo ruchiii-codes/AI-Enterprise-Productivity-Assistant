@@ -61,6 +61,8 @@ def search_embeddings(query_embedding, top_k=3):
         n_results=top_k
     )
 
+    return results
+
 def get_parent_documents(results):
     """
     Replace retrieved child chunks with their parent documents.

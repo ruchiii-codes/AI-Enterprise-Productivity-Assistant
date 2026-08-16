@@ -1,0 +1,24 @@
+:root {
+  --wm-bg: #09090b;
+  --wm-surface: #111113;
+  --wm-surface-raised: #18181b;
+  --wm-border: rgba(255, 255, 255, 0.08);
+
+  --wm-text: #f4f4f5;
+  --wm-text-secondary: #a1a1aa;
+  --wm-text-muted: #71717a;
+
+  --wm-accent: #a78bfa;
+  --wm-accent-soft: rgba(167, 139, 250, 0.12);
+
+  --wm-success: #34d399;
+  --wm-warning: #fbbf24;
+  --wm-danger: #f87171;
+
+  --wm-radius-sm: 8px;
+  --wm-radius-md: 12px;
+  --wm-radius-lg: 18px;
+
+  --wm-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.35);
+}

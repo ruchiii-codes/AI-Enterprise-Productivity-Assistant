@@ -1,7 +1,7 @@
 from server.services.search_service import search_documents
 
 
-def retrieve(query: str):
+def retrieve(query: str, history=None):
     """
     Retriever Agent
 
@@ -9,4 +9,4 @@ def retrieve(query: str):
     relevant documents for the planner.
     """
 
-    return search_documents(query)
+    return search_documents(query, history=history)

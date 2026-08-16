@@ -6,7 +6,6 @@ from server.services.planner_service import (
     plan_route,
     Route,
 )
-from server.services.tool_service import count_uploaded_pdfs
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -195,7 +194,15 @@ def chat(
             detail="Question cannot be empty."
         )
 
-    route = plan_route(chat_request.question)
+    history = get_recent_messages(
+        db=db,
+        conversation_id=chat_request.conversation_id,
+    )
+    
+    route = plan_route(
+        chat_request.question,
+        history=history,
+    )
 
     logger.info("Planner Route selected: %s", route.value)
 
@@ -207,6 +214,7 @@ def chat(
         result = execute(
             route=route,
             question=chat_request.question,
+            history=history,
         )
 
         # Retrieval continues into chat flow
@@ -238,17 +246,21 @@ def chat(
             "metadatas": [],
         }
 
-    # Load previous conversation history
-    history = get_recent_messages(
-        db=db,
-        conversation_id=chat_request.conversation_id,
-    )
+    # Build messages for the LLM
+    if route == Route.RETRIEVAL:
+        # The RAG service already builds a complete grounded prompt
+        messages = prompt
+    else:
+        # Direct LLM requests can use conversation history
+        history = get_recent_messages(
+            db=db,
+            conversation_id=chat_request.conversation_id,
+        )
 
-    # Build OpenAI messages
-    messages = build_messages(
-        history=history,
-        current_prompt=prompt,
-    )
+        messages = build_messages(
+            history=history,
+            current_prompt=prompt,
+        )
 
     add_message(
         db=db,
@@ -263,7 +275,7 @@ def chat(
 
         add_message(
             db=db,
-            conversation_id=request.conversation_id,
+            conversation_id=chat_request.conversation_id,
             role="assistant",
             content=answer,
         )
