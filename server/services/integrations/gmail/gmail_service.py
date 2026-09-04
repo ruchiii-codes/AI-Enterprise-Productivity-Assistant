@@ -1,30 +1,76 @@
-from googleapiclient.discovery import build
-
-from server.services.integrations.gmail.gmail_auth import get_gmail_credentials
-
 from email.mime.text import MIMEText
 import base64
 
-def get_gmail_service():
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+
+from server.auth.database import SessionLocal
+from server.auth.models import GmailConnection
+from server.config import (
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
+)
+
+
+GMAIL_SCOPES = [
+    "https://www.googleapis.com/auth/gmail.readonly",
+    "https://www.googleapis.com/auth/gmail.send",
+]
+
+
+def get_gmail_service(user_id: int):
     """
-    Creates and returns an authenticated Gmail API service.
+    Creates and returns an authenticated Gmail API service
+    for the specified WorkMind user.
     """
 
-    credentials = get_gmail_credentials()
+    db = SessionLocal()
 
-    return build(
-        "gmail",
-        "v1",
-        credentials=credentials,
-    )
+    try:
+        connection = (
+            db.query(GmailConnection)
+            .filter(GmailConnection.user_id == user_id)
+            .first()
+        )
+
+        if not connection:
+            raise ValueError(
+                "Gmail is not connected for this WorkMind user."
+            )
+
+        credentials = Credentials(
+            token=connection.access_token,
+            refresh_token=connection.refresh_token,
+            token_uri=connection.token_uri,
+            client_id=GOOGLE_CLIENT_ID,
+            client_secret=GOOGLE_CLIENT_SECRET,
+            scopes=GMAIL_SCOPES,
+        )
+
+        # Refresh credentials when Google reports them as expired.
+        if credentials.expired and credentials.refresh_token:
+            credentials.refresh(Request())
+
+            connection.access_token = credentials.token
+            db.commit()
+
+        return build(
+            "gmail",
+            "v1",
+            credentials=credentials,
+        )
+
+    finally:
+        db.close()
 
 
-def get_profile():
+def get_profile(user_id: int):
     """
     Returns the authenticated Gmail user's profile.
     """
 
-    service = get_gmail_service()
+    service = get_gmail_service(user_id)
 
     profile = (
         service.users()
@@ -39,12 +85,12 @@ def get_profile():
     }
 
 
-def list_messages(max_results=10):
+def list_messages(user_id: int, max_results=10):
     """
     Returns recent Gmail messages.
     """
 
-    service = get_gmail_service()
+    service = get_gmail_service(user_id)
 
     response = (
         service.users()
@@ -57,7 +103,6 @@ def list_messages(max_results=10):
     )
 
     messages = response.get("messages", [])
-
     results = []
 
     for message in messages:
@@ -78,12 +123,9 @@ def list_messages(max_results=10):
             .execute()
         )
 
-        headers = message_data.get(
-            "payload",
-            {}
-        ).get(
-            "headers",
-            []
+        headers = (
+            message_data.get("payload", {})
+            .get("headers", [])
         )
 
         header_dict = {
@@ -106,12 +148,16 @@ def list_messages(max_results=10):
     return results
 
 
-def search_messages(query: str, max_results=10):
+def search_messages(
+    user_id: int,
+    query: str,
+    max_results=10,
+):
     """
     Searches Gmail using Gmail search syntax.
     """
 
-    service = get_gmail_service()
+    service = get_gmail_service(user_id)
 
     response = (
         service.users()
@@ -125,7 +171,6 @@ def search_messages(query: str, max_results=10):
     )
 
     messages = response.get("messages", [])
-
     results = []
 
     for message in messages:
@@ -146,12 +191,9 @@ def search_messages(query: str, max_results=10):
             .execute()
         )
 
-        headers = message_data.get(
-            "payload",
-            {}
-        ).get(
-            "headers",
-            []
+        headers = (
+            message_data.get("payload", {})
+            .get("headers", [])
         )
 
         header_dict = {
@@ -171,10 +213,7 @@ def search_messages(query: str, max_results=10):
             }
         )
 
-    return results    
-
-
-import base64
+    return results
 
 
 def extract_message_body(payload):
@@ -201,12 +240,12 @@ def extract_message_body(payload):
     return ""
 
 
-def get_message(message_id: str):
+def get_message(user_id: int, message_id: str):
     """
     Returns the full content of a Gmail message.
     """
 
-    service = get_gmail_service()
+    service = get_gmail_service(user_id)
 
     message = (
         service.users()
@@ -219,12 +258,9 @@ def get_message(message_id: str):
         .execute()
     )
 
-    headers = message.get(
-        "payload",
-        {}
-    ).get(
-        "headers",
-        []
+    headers = (
+        message.get("payload", {})
+        .get("headers", [])
     )
 
     header_dict = {
@@ -233,7 +269,6 @@ def get_message(message_id: str):
     }
 
     payload = message.get("payload", {})
-
     body = extract_message_body(payload)
 
     return {
@@ -244,15 +279,20 @@ def get_message(message_id: str):
         "subject": header_dict.get("Subject"),
         "date": header_dict.get("Date"),
         "body": body,
-    }    
+    }
 
 
-def send_email(to: str, subject: str, body: str):
+def send_email(
+    user_id: int,
+    to: str,
+    subject: str,
+    body: str,
+):
     """
-    Sends an email through Gmail.
+    Sends an email through the specified user's Gmail account.
     """
 
-    service = get_gmail_service()
+    service = get_gmail_service(user_id)
 
     message = MIMEText(body)
 
@@ -269,7 +309,7 @@ def send_email(to: str, subject: str, body: str):
         .send(
             userId="me",
             body={
-                "raw": encoded_message
+                "raw": encoded_message,
             },
         )
         .execute()

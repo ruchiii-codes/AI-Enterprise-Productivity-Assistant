@@ -44,7 +44,7 @@ from server.services.integrations.gmail.gmail_parser import (
     extract_gmail_search_query,
 )
 
-def resolve_tool(query: str):
+def resolve_tool(query: str, user_id: int = None):
     """
     Routes tool requests and formats the response.
     """
@@ -62,7 +62,7 @@ def resolve_tool(query: str):
             "my email account",
         ]
     ):
-        profile = gmail_get_profile()
+        profile = gmail_get_profile(user_id=user_id)
 
         return format_profile(profile)
 
@@ -80,7 +80,7 @@ def resolve_tool(query: str):
     ):
         from server.services.integrations.gmail.gmail_tool import gmail_summarize_latest_email
 
-        return gmail_summarize_latest_email()
+        return gmail_summarize_latest_email(user_id=user_id)
 
     # -----------------------------
     # Gmail Recent Emails
@@ -88,15 +88,22 @@ def resolve_tool(query: str):
     if any(
         phrase in query
         for phrase in [
+            "recent email",
             "recent emails",
+            "latest email",
             "latest emails",
+            "recent mail",
             "recent mails",
+            "latest mail",
             "latest mails",
+            "show my email",
             "show my emails",
+            "show my mail",
             "show my mails",
         ]
     ):
         messages = gmail_list_messages(
+            user_id=user_id,
             max_results=10
         )
 
@@ -124,6 +131,7 @@ def resolve_tool(query: str):
             return "Please specify what emails you want to search for."
 
         messages = gmail_search_messages(
+            user_id=user_id,
             query=search_query,
             max_results=10,
         )
@@ -205,7 +213,7 @@ def resolve_tool(query: str):
     # -----------------------------
     if "who am i on github" in query:
 
-        user = github_get_user()
+        user = github_get_user(user_id)
 
         return (
             f"GitHub Username: {user['username']}\n"
@@ -223,7 +231,8 @@ def resolve_tool(query: str):
             return "Please specify a repository name."
 
         repository = github_repository_details(
-            owner=github_get_owner(),
+            user_id=user_id,
+            owner=github_get_owner(user_id),
             repo=repo,
         )
 
@@ -255,7 +264,8 @@ def resolve_tool(query: str):
             return 'Please provide an issue title using: titled "Your Title".'
 
         issue = github_create_issue(
-            owner=github_get_owner(),
+            user_id=user_id,
+            owner=github_get_owner(user_id),
             repo=repo,
             title=title,
         )
@@ -274,7 +284,8 @@ def resolve_tool(query: str):
             return "Please specify a repository name."
 
         issues = github_list_issues(
-            owner=github_get_owner(),
+            user_id=user_id,
+            owner=github_get_owner(user_id),
             repo=repo,
         )
 
@@ -291,7 +302,8 @@ def resolve_tool(query: str):
             return "Please specify a repository name."
 
         pull_requests = github_list_pull_requests(
-            owner=github_get_owner(),
+            user_id=user_id,
+            owner=github_get_owner(user_id),
             repo=repo,
         )
 
@@ -309,5 +321,5 @@ def resolve_tool(query: str):
             "repo",
         ]
     ):
-        repositories = github_list_repositories()
+        repositories = github_list_repositories(user_id)
         return format_repositories(repositories)

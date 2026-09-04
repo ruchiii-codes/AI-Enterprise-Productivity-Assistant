@@ -13,7 +13,12 @@ from server.services.multi_query_service import generate_multi_queries
 from server.services.hyde_service import generate_hypothetical_document
 from server.services.context_compression_service import compress_context
 
-def search_documents(query: str, history=None):
+def search_documents(
+    query: str,
+    history=None,
+    user_id: int | None = None,
+    conversation_id: int | None = None,
+):
     """
     Search relevant documents and build a prompt for the LLM.
     """
@@ -34,7 +39,11 @@ def search_documents(query: str, history=None):
     for search_query in multi_queries:
         query_embedding = generate_query_embedding(search_query)
 
-        results = search_embeddings(query_embedding)
+        results = search_embeddings(
+            query_embedding,
+            user_id=user_id,
+            conversation_id=conversation_id,
+        )
 
         results = get_parent_documents(results)
 
@@ -46,7 +55,11 @@ def search_documents(query: str, history=None):
     # HyDE retrieval
     hyde_embedding = generate_query_embedding(hypothetical_document)
 
-    hyde_results = search_embeddings(hyde_embedding)
+    hyde_results = search_embeddings(
+        hyde_embedding,
+        user_id=user_id,
+        conversation_id=conversation_id,
+    )
 
     hyde_results = get_parent_documents(hyde_results)
 
@@ -68,6 +81,22 @@ def search_documents(query: str, history=None):
     documents = list(unique_results.keys())
     metadatas = [item[0] for item in unique_results.values()]
     distances = [item[1] for item in unique_results.values()]
+
+    print("\n" + "=" * 80)
+    print("RETRIEVAL DISTANCES")
+    print("=" * 80)
+    
+    for document, metadata, distance in zip(
+        documents,
+        metadatas,
+        distances,
+    ):
+        print("DISTANCE:", distance)
+        print("FILENAME:", metadata.get("filename"))
+        print("DOCUMENT:", document[:200])
+        print("-" * 80)
+    
+    print("=" * 80 + "\n")
 
     filtered_documents = []
     filtered_metadatas = []
@@ -103,23 +132,45 @@ def search_documents(query: str, history=None):
 
     # Hybrid Search
     if bm25_store.bm25_index is not None:
-
+    
         bm25_results = bm25_search(
             query=rewritten_query,
             bm25=bm25_store.bm25_index,
             chunks=bm25_store.document_chunks,
+            metadata=bm25_store.document_metadata,
             top_k=3,
+            user_id=user_id,
+            conversation_id=conversation_id,
         )
-
+    
         hybrid_documents = list(
             dict.fromkeys(filtered_documents + bm25_results)
         )
-
+    
         final_documents = rerank_documents(
             query=rewritten_query,
             documents=hybrid_documents,
             top_k=3,
+            min_score=0.1,
         )
+    
+        # Keep metadata aligned with the final reranked documents
+        metadata_by_document = {
+            document: metadata
+            for document, metadata in zip(
+                filtered_documents,
+                filtered_metadatas,
+            )
+        }
+    
+        final_metadatas = [
+            metadata_by_document[document]
+            for document in final_documents
+            if document in metadata_by_document
+        ]
+    
+    else:
+        final_metadatas = filtered_metadatas
 
         print("\n" + "=" * 80)
         print("AFTER RERANKING")
@@ -128,36 +179,35 @@ def search_documents(query: str, history=None):
             print(doc[:500])
         print("=" * 80)
 
-    # Context compression
-    compressed_context = compress_context(
-        rewritten_query,
-        final_documents,
-    )
+    # Use the actual retrieved documents as context.
+    # Do not rewrite/compress them with an LLM here,
+    # because that can introduce information not present
+    # in the uploaded documents.
     
-    # If context compression could not produce useful context,
-    # treat the retrieval as unsuccessful.
-    if not compressed_context or not compressed_context.strip():
+    retrieved_context = "\n\n---\n\n".join(final_documents)
+    
+    if not retrieved_context.strip():
         return {
             "prompt": None,
             "documents": [],
             "metadatas": [],
             "distances": [],
-        }  
-
+        }
+    
     print("\n" + "=" * 80)
     print("FINAL RETRIEVED CONTEXT")
     print("=" * 80)
-    print(compressed_context)
+    print(retrieved_context)
     print("=" * 80 + "\n")
-
+    
     prompt = build_prompt(
         query,
-        [compressed_context],
+        [retrieved_context],
     )
 
     return {
         "prompt": prompt,
         "documents": final_documents,
-        "metadatas": filtered_metadatas,
-        "distances": filtered_distances,
+        "metadatas": final_metadatas,
+        "distances": [],
     }

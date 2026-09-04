@@ -1,12 +1,15 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import Brand from "../components/Brand";
+import { registerUser } from "../services/authService";
 import "../styles/auth.css";
 
 function Register() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [registeredEmail, setRegisteredEmail] = useState("");
 
   const [form, setForm] = useState({
     name: "",
@@ -24,19 +27,73 @@ function Register() {
     }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
+    setError("");
+  
     if (form.password !== form.confirmPassword) {
-      alert("Passwords do not match.");
+      setError("Passwords do not match.");
       return;
     }
+  
+    try {
+      await registerUser(
+        form.name,
+        form.email,
+        form.password
+      );
 
-    console.log("Registration:", form);
+      setRegisteredEmail(form.email);
+
+    } catch (error) {
+      setError(error.message || "Registration failed.");
+    }
   };
 
   return (
     <main className="auth-page">
+      
+      {registeredEmail ? (
+        <section className="auth-shell">
+          <div className="auth-form-panel">
+            <div className="auth-form-container">
+              <div className="mobile-brand">
+                <Brand compact />
+              </div>
+      
+              <div className="form-heading">
+                <span className="form-kicker">CHECK YOUR EMAIL</span>
+      
+                <h2>Verify your email</h2>
+      
+                <p>
+                  We sent a verification link to:
+                </p>
+      
+                <p>
+                  <strong>{registeredEmail}</strong>
+                </p>
+      
+                <p>
+                  Click the link in the email to verify your account.
+                  The link will expire in 24 hours.
+                </p>
+      
+                <button
+                  type="button"
+                  className="auth-submit"
+                  onClick={() => window.open("https://mail.google.com", "_blank")}
+                >
+                  <span>Go to Gmail</span>
+                  <span className="submit-arrow">→</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : (
+
       <section className="auth-shell register-shell">
         {/* Left side */}
         <div className="auth-visual">
@@ -111,6 +168,11 @@ function Register() {
               <span className="form-kicker">GET STARTED</span>
               <h2>Create your workspace</h2>
               <p>Set up your WorkMind account in a few seconds.</p>
+              {error && (
+                <div className="auth-error">
+                  {error}
+                </div>
+              )}
             </div>
 
             <form onSubmit={handleSubmit} className="auth-form">
@@ -230,8 +292,8 @@ function Register() {
           </div>
         </div>
       </section>
+      )}
     </main>
   );
 }
-
 export default Register;

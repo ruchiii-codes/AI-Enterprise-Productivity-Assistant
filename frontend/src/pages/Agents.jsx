@@ -1,10 +1,12 @@
 import { Link } from "react-router-dom";
 import Brand from "../components/Brand";
 import "../styles/workspace.css";
+import ProfileMenu from "../components/ProfileMenu";
 
 function Agents() {
   return (
     <main className="workspace-page">
+      {/* Sidebar */}
       <aside className="workspace-sidebar">
         <div className="sidebar-top">
           <Brand compact />
@@ -38,108 +40,121 @@ function Agents() {
             </Link>
           </div>
         </div>
-
-        <div className="sidebar-bottom">
-          <Link to="/settings" className="workspace-nav">
-            <span>⚙</span>
-            Settings
-          </Link>
-        </div>
       </aside>
 
+      {/* Main content */}
       <section className="workspace-main">
+        {/* Header */}
         <header className="workspace-header">
           <span className="header-status">
             <span />
-            AGENT SYSTEM
+            AGENTS ONLINE
           </span>
+
+          <div className="header-actions">
+            <ProfileMenu />
+          </div>
         </header>
 
         <div className="workspace-content">
+          {/* Hero */}
           <section className="workspace-hero">
             <div>
               <span className="hero-kicker">AI AGENTS</span>
 
               <h1>
-                Don't just ask AI.
+                Your AI teammates,
                 <br />
-                <span>Let it work.</span>
+                <span>ready to help.</span>
               </h1>
 
               <p>
-                WorkMind agents can plan, retrieve information,
-                use tools, and complete multi-step tasks.
+                WorkMind can handle different kinds of work
+                so you can focus on what matters.
               </p>
-            </div>
-
-            <div className="hero-orbit">
-              <div className="orbit-ring orbit-ring-one" />
-              <div className="orbit-ring orbit-ring-two" />
-              <div className="orbit-core">◇</div>
-              <span className="orbit-dot orbit-dot-one" />
-              <span className="orbit-dot orbit-dot-two" />
-              <span className="orbit-dot orbit-dot-three" />
             </div>
           </section>
 
-          <section className="capability-grid">
-            <div className="dashboard-card">
-              <div className="card-top">
-                <div className="dashboard-icon">◇</div>
-              </div>
-
-              <div className="card-content">
-                <span className="card-label">PLANNER</span>
-                <h3>Planner Agent</h3>
-                <p>
-                  Break complex requests into smaller,
-                  actionable steps.
-                </p>
-              </div>
-
-              <div className="agent-status">
-                <span className="pulse-dot" />
-                Available
-              </div>
+          {/* Agents */}
+          <section>
+            <div className="knowledge-section-header">
+              <span className="card-label">YOUR AI AGENTS</span>
             </div>
 
-            <div className="dashboard-card">
-              <div className="card-top">
-                <div className="dashboard-icon">✦</div>
+            <div className="capability-grid">
+              {/* Research & Knowledge */}
+              <div className="dashboard-card">
+                <div className="card-top">
+                  <div className="dashboard-icon">✦</div>
+                </div>
+
+                <div className="card-content">
+                  <span className="card-label">
+                    RESEARCH & KNOWLEDGE
+                  </span>
+
+                  <h3>Research & Knowledge</h3>
+
+                  <p>
+                    Find relevant information from your
+                    connected knowledge and get useful answers.
+                  </p>
+                </div>
+
+                <div className="agent-status">
+                  <span className="pulse-dot" />
+                  Ready
+                </div>
               </div>
 
-              <div className="card-content">
-                <span className="card-label">RETRIEVER</span>
-                <h3>Retriever Agent</h3>
-                <p>
-                  Find and select the most relevant knowledge
-                  for each task.
-                </p>
+              {/* Planning */}
+              <div className="dashboard-card">
+                <div className="card-top">
+                  <div className="dashboard-icon">◇</div>
+                </div>
+
+                <div className="card-content">
+                  <span className="card-label">
+                    PLANNING
+                  </span>
+
+                  <h3>Planning</h3>
+
+                  <p>
+                    Break complex work into clear,
+                    actionable steps.
+                  </p>
+                </div>
+
+                <div className="agent-status">
+                  <span className="pulse-dot" />
+                  Ready
+                </div>
               </div>
 
-              <div className="agent-status">
-                <span className="pulse-dot" />
-                Available
-              </div>
-            </div>
+              {/* Summarization */}
+              <div className="dashboard-card">
+                <div className="card-top">
+                  <div className="dashboard-icon">≡</div>
+                </div>
 
-            <div className="dashboard-card">
-              <div className="card-top">
-                <div className="dashboard-icon">≡</div>
-              </div>
+                <div className="card-content">
+                  <span className="card-label">
+                    SUMMARIZATION
+                  </span>
 
-              <div className="card-content">
-                <span className="card-label">SUMMARY</span>
-                <h3>Summary Agent</h3>
-                <p>
-                  Turn large amounts of information into
-                  concise, useful results.
-                </p>
-              </div>
+                  <h3>Summarization</h3>
 
-              <div className="agent-status">
-                <span className="pulse-dot" />
-                Available
+                  <p>
+                    Turn large amounts of information
+                    into concise, useful results.
+                  </p>
+                </div>
+
+                <div className="agent-status">
+                  <span className="pulse-dot" />
+                  Ready
+                </div>
               </div>
             </div>
           </section>

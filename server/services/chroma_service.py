@@ -1,5 +1,6 @@
 import chromadb
 from chromadb.config import Settings
+import uuid
 
 # Create a persistent ChromaDB client
 chroma_client = chromadb.PersistentClient(
@@ -12,17 +13,32 @@ collection = chroma_client.get_or_create_collection(
     name="documents"
 )
 
-def store_embeddings(chunks, embeddings, filename, parent_chunks=None):
+def store_embeddings(
+    chunks,
+    embeddings,
+    filename,
+    parent_chunks=None,
+    user_id=None,
+    conversation_id=None,
+):
     """
     Store child chunks and their parent chunks in ChromaDB.
     """
+    print(
+        "DEBUG CHROMA:",
+        "user_id =", user_id,
+        "| conversation_id =", conversation_id,
+        "| filename =", filename,
+    )
 
     ids = []
     documents = []
     metadatas = []
 
+    document_id = str(uuid.uuid4())
+
     for i, chunk in enumerate(chunks):
-        ids.append(f"{filename}_child_{i}")
+        ids.append(f"{document_id}_child_{i}")
         documents.append(chunk)
 
         parent = (
@@ -36,6 +52,8 @@ def store_embeddings(chunks, embeddings, filename, parent_chunks=None):
             "chunk": i,
             "parent_id": i,
             "parent": parent,
+            "user_id": user_id,
+            "conversation_id": conversation_id,
         })
 
     collection.add(
@@ -51,15 +69,30 @@ def get_collection_count():
     """
     return collection.count()
 
-def search_embeddings(query_embedding, top_k=3):
+def search_embeddings(
+    query_embedding,
+    top_k=3,
+    user_id=None,
+    conversation_id=None,
+):
     """
     Search the most relevant document chunks.
     """
 
-    results = collection.query(
-        query_embeddings=[query_embedding.tolist()],
-        n_results=top_k
-    )
+    query_kwargs = {
+        "query_embeddings": [query_embedding.tolist()],
+        "n_results": top_k,
+    }
+    
+    if user_id is not None and conversation_id is not None:
+        query_kwargs["where"] = {
+            "$and": [
+                {"user_id": user_id},
+                {"conversation_id": conversation_id},
+            ]
+        }
+    
+    results = collection.query(**query_kwargs)
 
     return results
 

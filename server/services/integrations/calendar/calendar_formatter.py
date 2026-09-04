@@ -28,11 +28,11 @@ def format_event(event):
     return "\n".join(result)
 
 
-def format_events(events):
+def format_events(events, title="Upcoming Calendar Events"):
     if not events:
         return "No upcoming calendar events found."
 
-    output = ["Upcoming Calendar Events", ""]
+    output = [title, ""]
 
     for index, event in enumerate(events, start=1):
         output.append(f"{index}. {format_event(event)}")

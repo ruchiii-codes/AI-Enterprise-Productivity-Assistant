@@ -12,20 +12,39 @@ def create_bm25_index(chunks: List[str]):
 
     return bm25
 
-
 def bm25_search(
     query: str,
     bm25: BM25Okapi,
     chunks: List[str],
+    metadata: List[dict],
     top_k: int = 3,
+    user_id: int | None = None,
+    conversation_id: int | None = None,
 ):
-
     tokenized_query = query.split()
 
     scores = bm25.get_scores(tokenized_query)
 
-    top_indices = np.argsort(scores)[::-1][:top_k]
+    allowed_indices = [
+        index
+        for index, item in enumerate(metadata)
+        if (
+            user_id is None
+            or item.get("user_id") == user_id
+        )
+        and (
+            conversation_id is None
+            or item.get("conversation_id") == conversation_id
+        )
+    ]
 
-    top_chunks = [chunks[i] for i in top_indices]
+    if not allowed_indices:
+        return []
 
-    return top_chunks
+    ranked_indices = sorted(
+        allowed_indices,
+        key=lambda index: scores[index],
+        reverse=True,
+    )[:top_k]
+
+    return [chunks[index] for index in ranked_indices]

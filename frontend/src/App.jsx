@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import VerifyEmail from "./pages/VerifyEmail";
 import Workspace from "./pages/Workspace";
 import Knowledge from "./pages/Knowledge";
 import Agents from "./pages/Agents";
@@ -19,6 +20,7 @@ function App() {
 
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
 
         <Route path="/workspace" element={<Workspace />} />
         <Route path="/chat" element={<Chat />} />

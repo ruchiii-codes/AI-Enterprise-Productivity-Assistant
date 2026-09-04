@@ -1,8 +1,11 @@
 from sqlalchemy import (
+    Boolean,
     Column,
+    DateTime,
     ForeignKey,
     Integer,
     String,
+    JSON,
 )
 
 from sqlalchemy.orm import relationship
@@ -41,6 +44,22 @@ class User(Base):
         nullable=False,
     )
 
+    is_verified = Column(
+        Boolean,
+        default=False,
+        nullable=False,
+    )
+
+    verification_token = Column(
+        String,
+        nullable=True,
+    )
+
+    verification_token_expires = Column(
+        DateTime,
+        nullable=True,
+    )
+
     documents = relationship(
         "Document",
         back_populates="owner",
@@ -53,6 +72,165 @@ class User(Base):
         cascade="all, delete-orphan",
     )
 
+    github_connection = relationship(
+        "GitHubConnection",
+        back_populates="owner",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+
+    gmail_connection = relationship(
+        "GmailConnection",
+        back_populates="owner",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+
+    calendar_connection = relationship(
+        "CalendarConnection",
+        back_populates="owner",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+
+class GitHubConnection(Base):
+
+    __tablename__ = "github_connections"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id"),
+        nullable=False,
+        unique=True,
+    )
+
+    github_user_id = Column(
+        Integer,
+        nullable=False,
+    )
+
+    github_username = Column(
+        String,
+        nullable=False,
+    )
+
+    access_token = Column(
+        String,
+        nullable=False,
+    )
+
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+    )
+
+    owner = relationship(
+        "User",
+        back_populates="github_connection",
+    )    
+
+class GmailConnection(Base):
+
+    __tablename__ = "gmail_connections"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id"),
+        nullable=False,
+        unique=True,
+    )
+
+    gmail_email = Column(
+        String,
+        nullable=False,
+    )
+
+    access_token = Column(
+        String,
+        nullable=False,
+    )
+
+    refresh_token = Column(
+        String,
+        nullable=False,
+    )
+
+    token_uri = Column(
+        String,
+        nullable=False,
+    )
+
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+    )
+
+    owner = relationship(
+        "User",
+        back_populates="gmail_connection",
+    )    
+
+class CalendarConnection(Base):
+
+    __tablename__ = "calendar_connections"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id"),
+        nullable=False,
+        unique=True,
+    )
+
+    calendar_email = Column(
+        String,
+        nullable=False,
+    )
+
+    access_token = Column(
+        String,
+        nullable=False,
+    )
+
+    refresh_token = Column(
+        String,
+        nullable=False,
+    )
+
+    token_uri = Column(
+        String,
+        nullable=False,
+    )
+
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+    )
+
+    owner = relationship(
+        "User",
+        back_populates="calendar_connection",
+    )
 
 class Document(Base):
 
@@ -80,8 +258,30 @@ class Document(Base):
         nullable=False,
     )
 
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+    )
+
+    conversation_id = Column(
+        Integer,
+        ForeignKey("conversations.id"),
+        nullable=True,
+    )
+
+    page_count = Column(
+        Integer,
+        nullable=True,
+    )
+
     owner = relationship(
         "User",
+        back_populates="documents",
+    )
+
+    conversation = relationship(
+        "Conversation",
         back_populates="documents",
     )
 
@@ -101,6 +301,17 @@ class Conversation(Base):
         nullable=False,
     )
 
+    is_pinned = Column(
+        Boolean,
+        default=False,
+        nullable=False,
+    )
+
+    pinned_at = Column(
+        DateTime,
+        nullable=True,
+    )
+
     user_id = Column(
         Integer,
         ForeignKey("users.id"),
@@ -114,6 +325,12 @@ class Conversation(Base):
 
     messages = relationship(
         "Message",
+        back_populates="conversation",
+        cascade="all, delete-orphan",
+    )
+
+    documents = relationship(
+        "Document",
         back_populates="conversation",
         cascade="all, delete-orphan",
     )
@@ -144,7 +361,13 @@ class Message(Base):
         String,
         nullable=False,
     )
-
+    
+    sources = Column(
+        JSON,
+        nullable=False,
+        default=list,
+    )
+    
     created_at = Column(
         DateTime,
         default=datetime.utcnow,

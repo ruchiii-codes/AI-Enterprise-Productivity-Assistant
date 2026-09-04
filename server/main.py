@@ -17,9 +17,13 @@ from openai import (
 )
 
 from server.api.upload import router as upload_router
+from server.api.document import router as document_router
 from server.models.chat import ChatRequest
 from server.services.search_service import search_documents
-from server.services.llm_service import generate_response
+from server.services.llm_service import (
+    generate_response,
+    format_tool_response,
+)
 
 from server.services.orchestrator_service import execute
 
@@ -31,7 +35,7 @@ from server.api.auth import router as auth_router
 from fastapi import Depends
 
 from server.auth.dependencies import get_current_user
-from server.auth.models import User
+from server.auth.models import User, Document
 
 from server.api.conversation import (
     router as conversation_router,
@@ -52,6 +56,7 @@ from server.services.message_service import (
 
 from server.services.conversation_service import (
     get_conversation,
+    update_conversation_title,
 )
 
 from slowapi import _rate_limit_exceeded_handler
@@ -59,6 +64,9 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
 from server.utils.rate_limiter import limiter
+from server.api.github_auth import router as github_auth_router
+from server.api.gmail_auth import router as gmail_auth_router
+from server.api.calendar_auth import router as calendar_auth_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -142,6 +150,11 @@ app.include_router(upload_router)
 app.include_router(auth_router)
 app.include_router(conversation_router)
 app.include_router(message_router)
+app.include_router(document_router)
+app.include_router(github_auth_router)
+app.include_router(gmail_auth_router)
+app.include_router(calendar_auth_router)
+
 
 @app.on_event("startup")
 def startup_event():
@@ -199,22 +212,60 @@ def chat(
         conversation_id=chat_request.conversation_id,
     )
     
-    route = plan_route(
-        chat_request.question,
-        history=history,
+    has_uploaded_documents = (
+        db.query(Document)
+        .filter(
+            Document.user_id == current_user.id,
+            Document.conversation_id == chat_request.conversation_id,
+        )
+        .first()
+        is not None
     )
 
-    logger.info("Planner Route selected: %s", route.value)
+    logger.info(
+        "Conversation %s has uploaded documents: %s",
+        chat_request.conversation_id,
+        has_uploaded_documents,
+    )
+    
+    plan = plan_route(
+        chat_request.question,
+        history=history,
+        has_uploaded_documents=has_uploaded_documents,
+    )
 
+    results = {
+        "metadatas": []
+    }
+        
+    route = plan["route"]
+    
+    logger.info(
+        "Planner decision: route=%s tool=%s intent=%s parameters=%s",
+        route.value,
+        plan.get("tool"),
+        plan.get("intent"),
+        plan.get("parameters"),
+    )
+    
     # -----------------------------
     # Orchestrator
     # -----------------------------
     if route != Route.DIRECT_LLM:
-
+    
         result = execute(
-            route=route,
+            plan=plan,
             question=chat_request.question,
             history=history,
+            user_id=current_user.id,
+            conversation_id=chat_request.conversation_id,
+        )
+
+        logger.info(
+            "RETRIEVAL RESULT: prompt_is_none=%s, prompt_type=%s, keys=%s",
+            result.get("prompt") is None if isinstance(result, dict) else "NOT_DICT",
+            type(result.get("prompt")).__name__ if isinstance(result, dict) else "N/A",
+            list(result.keys()) if isinstance(result, dict) else "N/A",
         )
 
         # Retrieval continues into chat flow
@@ -230,10 +281,45 @@ def chat(
             results = {
                 "metadatas": result["metadatas"],
             }
-    
-        # Tool & Summarization return immediately
+
+        # Tool & Summarization
         else:
-            return result
+            add_message(
+                db=db,
+                conversation_id=chat_request.conversation_id,
+                role="user",
+                content=chat_request.question,
+            )
+        
+            answer = result["answer"]
+        
+            if route == Route.TOOL:
+                answer = format_tool_response(
+                    tool=plan.get("tool"),
+                    intent=plan.get("intent"),
+                    result=answer,
+                    question=chat_request.question,
+                )
+        
+            add_message(
+                db=db,
+                conversation_id=chat_request.conversation_id,
+                role="assistant",
+                content=answer,
+            )
+        
+            if conversation.title == "New Conversation":
+                update_conversation_title(
+                    db=db,
+                    conversation_id=chat_request.conversation_id,
+                    user_id=current_user.id,
+                    title=chat_request.question[:60],
+                )
+        
+            return {
+                "answer": answer,
+                "sources": result.get("sources", []),
+            }
 
     # -----------------------------
     # Direct LLM
@@ -248,15 +334,31 @@ def chat(
 
     # Build messages for the LLM
     if route == Route.RETRIEVAL:
-        # The RAG service already builds a complete grounded prompt
-        messages = prompt
+        # RAG already retrieved the document context.
+        # Send the grounded prompt explicitly to the LLM.
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are answering a question about an uploaded document. "
+                    "Use ONLY the document context contained in the user message. "
+                    "If the answer is present in that context, answer it directly. "
+                    "Do not claim the answer is missing when relevant information "
+                    "is present. Do not use outside knowledge."
+                ),
+            },
+            {
+                "role": "user",
+                "content": prompt,
+            },
+        ]
     else:
         # Direct LLM requests can use conversation history
         history = get_recent_messages(
             db=db,
             conversation_id=chat_request.conversation_id,
         )
-
+    
         messages = build_messages(
             history=history,
             current_prompt=prompt,
@@ -278,7 +380,17 @@ def chat(
             conversation_id=chat_request.conversation_id,
             role="assistant",
             content=answer,
+            sources=results["metadatas"],
         )
+
+        # Set conversation title from the first user message
+        if conversation.title == "New Conversation":
+            update_conversation_title(
+                db=db,
+                conversation_id=chat_request.conversation_id,
+                user_id=current_user.id,
+                title=chat_request.question[:60],
+            )
     except APIConnectionError:
         raise HTTPException(
             status_code=503,
@@ -305,5 +417,5 @@ def chat(
 
     return {
         "answer": answer,
-        "sources": results["metadatas"]
+        "sources": results["metadatas"] if results else []
     }

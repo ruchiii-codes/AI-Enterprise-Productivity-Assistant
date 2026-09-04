@@ -17,7 +17,7 @@
   height: 100vh;
   padding: 22px 14px;
   border-right: 1px solid var(--wm-border);
-  background: #0c0c0f;
+  background: var(--wm-surface);
 }
 
 .sidebar-top {
@@ -701,4 +701,117 @@
 
 .dashboard-card {
   display: block;
+}
+
+/* =========================================================
+   KNOWLEDGE EMPTY STATE
+   ========================================================= */
+
+.knowledge-empty-state {
+  min-height: 150px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  padding: 28px;
+
+  border: 1px dashed var(--wm-border);
+  border-radius: 12px;
+
+  background: var(--wm-accent-soft);
+
+  color: var(--wm-text-muted);
+
+  text-align: center;
+  font-size: 11px;
+}
+
+.knowledge-empty-state > span {
+  display: grid;
+  place-items: center;
+
+  width: 38px;
+  height: 38px;
+
+  border-radius: 10px;
+
+  background: var(--wm-accent-soft);
+  color: var(--wm-accent);
+
+  font-size: 18px;
+}
+
+.knowledge-empty-state p {
+  margin: 0;
+
+  color: var(--wm-text-secondary);
+
+  font-size: 11px;
+}
+
+/* =========================================================
+   TOOLS ERROR
+   ========================================================= */
+
+.tools-error {
+  position: fixed;
+  top: 78px;
+  right: 24px;
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  max-width: 360px;
+  padding: 10px 12px;
+
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: 9px;
+
+  background: var(--wm-bg);
+  color: #f87171;
+
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+
+  font-size: 10px;
+}
+
+.tools-error > span:first-child {
+  display: grid;
+  place-items: center;
+
+  width: 18px;
+  height: 18px;
+
+  border-radius: 50%;
+
+  background: rgba(248, 113, 113, 0.1);
+
+  font-weight: 700;
+}
+
+.tools-error > span:nth-child(2) {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.tools-error button {
+  border: 0;
+  background: transparent;
+
+  color: var(--wm-text-muted);
+
+  font: inherit;
+  font-size: 16px;
+
+  cursor: pointer;
+}
+
+.tools-error button:hover {
+  color: var(--wm-text);
 }
