@@ -1,17 +1,69 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Brand from "../components/Brand";
 import "../styles/workspace.css";
+import ProfileMenu from "../components/ProfileMenu";
 
 const API_BASE_URL = "http://localhost:8000";
 
 function Knowledge() {
   const fileInputRef = useRef(null);
 
+  const [documents, setDocuments] = useState([]);
+  const [loadingDocuments, setLoadingDocuments] = useState(true);
+
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
+  // ---------------------------------------
+  // Fetch user's documents
+  // ---------------------------------------
+  const fetchDocuments = async () => {
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+      setError("Please log in again.");
+      setLoadingDocuments(false);
+      return;
+    }
+
+    try {
+      setError("");
+
+      const response = await fetch(`${API_BASE_URL}/documents`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.detail || "Unable to load your documents."
+        );
+      }
+
+      setDocuments(data);
+    } catch (err) {
+      setError(
+        err.message || "Something went wrong while loading documents."
+      );
+    } finally {
+      setLoadingDocuments(false);
+    }
+  };
+
+  // Load documents when page opens
+  useEffect(() => {
+    fetchDocuments();
+  }, []);
+
+  // ---------------------------------------
+  // Upload
+  // ---------------------------------------
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
@@ -38,7 +90,9 @@ function Knowledge() {
       const token = localStorage.getItem("access_token");
 
       if (!token) {
-        throw new Error("Please log in again before uploading a document.");
+        throw new Error(
+          "Please log in again before uploading a document."
+        );
       }
 
       const formData = new FormData();
@@ -63,16 +117,43 @@ function Knowledge() {
       setMessage(
         data.message || "Document uploaded and indexed successfully."
       );
+
+      // Refresh document list after successful upload
+      await fetchDocuments();
     } catch (err) {
-      setError(err.message || "Something went wrong during upload.");
+      setError(
+        err.message || "Something went wrong during upload."
+      );
     } finally {
       setUploading(false);
       event.target.value = "";
     }
   };
 
+  // ---------------------------------------
+  // Format date
+  // ---------------------------------------
+  const formatDate = (dateString) => {
+    if (!dateString) {
+      return "Date unavailable";
+    }
+
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return "Date unavailable";
+    }
+
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
   return (
     <main className="workspace-page">
+      {/* Sidebar */}
       <aside className="workspace-sidebar">
         <div className="sidebar-top">
           <Brand compact />
@@ -90,7 +171,10 @@ function Knowledge() {
               Overview
             </Link>
 
-            <Link to="/knowledge" className="workspace-nav active">
+            <Link
+              to="/knowledge"
+              className="workspace-nav active"
+            >
               <span>✦</span>
               Knowledge
             </Link>
@@ -106,125 +190,129 @@ function Knowledge() {
             </Link>
           </div>
         </div>
-
-        <div className="sidebar-bottom">
-          <Link to="/settings" className="workspace-nav">
-            <span>⚙</span>
-            Settings
-          </Link>
-        </div>
       </aside>
 
+      {/* Main content */}
       <section className="workspace-main">
+        {/* Header */}
         <header className="workspace-header">
           <span className="header-status">
             <span />
             KNOWLEDGE BASE
           </span>
+
+          <div className="header-actions">
+            <ProfileMenu />
+          </div>
         </header>
 
         <div className="workspace-content">
+          {/* Hero */}
           <section className="workspace-hero">
             <div>
               <span className="hero-kicker">YOUR KNOWLEDGE</span>
 
               <h1>
-                Everything you know,
+                Your documents,
                 <br />
-                <span>in one place.</span>
+                <span>all in one place.</span>
               </h1>
 
               <p>
-                Upload documents, search your knowledge, and get grounded
-                answers from your own information.
+                View and manage the documents you’ve added to WorkMind.
               </p>
             </div>
           </section>
 
-          <section className="capability-grid">
-            <div className="dashboard-card">
-              <div className="card-top">
-                <div className="dashboard-icon">✦</div>
-              </div>
+          {/* Document count + document list */}
+          <section className="knowledge-overview">
+            <div className="knowledge-stat">
+              <strong>
+                {loadingDocuments ? "—" : documents.length}
+              </strong>
 
-              <div className="card-content">
-                <span className="card-label">DOCUMENTS</span>
-                <h3>Knowledge library</h3>
-                <p>
-                  Your indexed documents and enterprise knowledge sources
-                  will appear here.
-                </p>
-              </div>
-
-              <div className="card-metric">
-                <strong>39+</strong>
-                <span>indexed chunks</span>
-              </div>
+              <span> Documents uploaded</span>
             </div>
 
-            <div className="dashboard-card">
-              <div className="card-top">
-                <div className="dashboard-icon">⌕</div>
+            <div className="knowledge-list-section">
+              <div className="knowledge-section-header">
+                <span className="card-label">
+                  YOUR KNOWLEDGE
+                </span>
               </div>
 
-              <div className="card-content">
-                <span className="card-label">RETRIEVAL</span>
-                <h3>Semantic search</h3>
-                <p>
-                  Find relevant information using WorkMind&apos;s intelligent
-                  retrieval pipeline.
-                </p>
+              <div className="knowledge-list">
+                {loadingDocuments ? (
+                  <div className="knowledge-empty-state">
+                    Loading your documents...
+                  </div>
+                ) : documents.length === 0 ? (
+                  <div className="knowledge-empty-state">
+                    <span>📄</span>
+                    <p>No documents uploaded yet.</p>
+                  </div>
+                ) : (
+                  documents.map((document) => (
+                    <div
+                      className="knowledge-item"
+                      key={document.id}
+                    >
+                      <div className="knowledge-file">
+                        <span className="knowledge-file-icon">
+                          📄
+                        </span>
+
+                        <div>
+                          <h3>{document.filename}</h3>
+
+                          <p>
+                            Added{" "}
+                            {formatDate(document.created_at)}
+                            {" · "}
+                            {document.page_count ?? "—"}{" "}
+                            {document.page_count === 1
+                              ? "page"
+                              : "pages"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <span className="knowledge-status">
+                        Indexed
+                      </span>
+                    </div>
+                  ))
+                )}
               </div>
-
-              <div className="agent-status">
-                <span className="pulse-dot" />
-                Search ready
-              </div>
-            </div>
-
-            <div className="dashboard-card">
-              <div className="card-top">
-                <div className="dashboard-icon">↑</div>
-              </div>
-
-              <div className="card-content">
-                <span className="card-label">UPLOAD</span>
-                <h3>Add knowledge</h3>
-                <p>
-                  Upload PDF documents to expand your workspace knowledge.
-                </p>
-              </div>
-
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,application/pdf"
-                onChange={handleFileChange}
-                style={{ display: "none" }}
-              />
-
-              <button
-                type="button"
-                className="new-chat-button"
-                onClick={handleUploadClick}
-                disabled={uploading}
-              >
-                {uploading ? "Uploading..." : "Upload document"}
-              </button>
-
-              {message && (
-                <p style={{ marginTop: "12px" }}>
-                  {message}
-                </p>
-              )}
-
-              {error && (
-                <p style={{ marginTop: "12px" }}>
-                  {error}
-                </p>
-              )}
             </div>
           </section>
+
+          {/* Hidden upload input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,application/pdf"
+            onChange={handleFileChange}
+            style={{ display: "none" }}
+          />
+
+          {uploading && (
+            <p style={{ marginTop: "16px" }}>
+              Uploading and indexing document...
+            </p>
+          )}
+
+          {message && (
+            <p style={{ marginTop: "16px" }}>
+              {message}
+            </p>
+          )}
+
+          {error && (
+            <p style={{ marginTop: "16px" }}>
+              {error}
+            </p>
+          )}
         </div>
       </section>
     </main>

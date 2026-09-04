@@ -1,4 +1,5 @@
 from fastapi import UploadFile
+from pypdf import PdfReader
 
 from server.services.bm25_service import create_bm25_index
 from server.services import bm25_store
@@ -15,13 +16,20 @@ from server.services.chroma_service import (
 from server.services.parent_child_service import create_parent_child_chunks
 
 
-def process_document(file: UploadFile):
+def process_document(
+    file: UploadFile,
+    user_id: int,
+    conversation_id: int,
+):
     """
     Complete document processing pipeline.
     """
 
     # Save PDF
     file_path = save_uploaded_file(file)
+
+    # Get PDF page count
+    page_count = len(PdfReader(str(file_path)).pages)
 
     # Extract text
     text = extract_text_from_pdf(str(file_path))
@@ -47,6 +55,14 @@ def process_document(file: UploadFile):
     # Create BM25 index and store in bm25_store
     bm25_store.bm25_index = create_bm25_index(child_chunks)
     bm25_store.document_chunks = child_chunks
+    
+    bm25_store.document_metadata = [
+        {
+            "user_id": user_id,
+            "conversation_id": conversation_id,
+        }
+        for _ in child_chunks
+    ]
 
     # Generate embeddings
     embeddings = generate_embeddings(child_chunks)
@@ -57,6 +73,8 @@ def process_document(file: UploadFile):
         embeddings=embeddings,
         filename=file_path.name,
         parent_chunks=parent_chunks,
+        user_id=user_id,
+        conversation_id=conversation_id,
     )
 
     # Print total stored chunks
@@ -66,6 +84,7 @@ def process_document(file: UploadFile):
     "message": "File uploaded successfully.",
     "filename": file_path.name,
     "file_path": str(file_path),
+    "page_count": page_count,
     "characters": len(text),
     "chunks": len(child_chunks),
     "embedding_count": len(embeddings),

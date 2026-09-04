@@ -1,8 +1,38 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Brand from "../components/Brand";
+import { getCurrentUser } from "../services/authService";
 import "../styles/workspace.css";
 
 function Settings() {
+  function Settings() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const loadUser = async () => {
+      const token = localStorage.getItem("access_token");
+
+      if (!token) {
+        setError("Authentication token not found.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const currentUser = await getCurrentUser(token);
+        setUser(currentUser);
+      } catch (err) {
+        setError(err.message || "Unable to load account information.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUser();
+  }, []);
+
   return (
     <main className="workspace-page">
       <aside className="workspace-sidebar">
@@ -95,6 +125,7 @@ function Settings() {
       </section>
     </main>
   );
+}
 }
 
 export default Settings;

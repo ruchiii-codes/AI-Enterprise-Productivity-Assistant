@@ -1,8 +1,37 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { getCurrentUser } from "../services/authService";
+import { getDocuments } from "../services/documentService";
 import Brand from "../components/Brand";
+import ProfileMenu from "../components/ProfileMenu";
 import "../styles/workspace.css";
 
 function Workspace() {
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [documents, setDocuments] = useState([]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+      return;
+    }
+
+    getCurrentUser(token)
+      .then(setUser)
+      .catch(() => {
+        setUser(null);
+      });
+
+    getDocuments(token)
+      .then(setDocuments)
+      .catch(() => {
+        setDocuments([]);
+      });  
+
+  }, []);
+
   return (
     <main className="workspace-page">
       {/* Sidebar */}
@@ -10,32 +39,13 @@ function Workspace() {
         <div className="sidebar-top">
           <Brand compact />
 
-          <button className="new-chat-button">
+          <button
+            className="new-chat-button"
+            onClick={() => navigate("/chat")}
+          >
             <span>+</span>
             <span>New conversation</span>
-            <kbd>⌘ K</kbd>
           </button>
-
-          <div className="sidebar-section">
-            <div className="sidebar-label">
-              CONVERSATIONS
-            </div>
-
-            <button className="conversation active">
-              <span className="conversation-icon">✦</span>
-              <span>Project research</span>
-            </button>
-
-            <button className="conversation">
-              <span className="conversation-icon">◌</span>
-              <span>RAG architecture</span>
-            </button>
-
-            <button className="conversation">
-              <span className="conversation-icon">◌</span>
-              <span>Weekly planning</span>
-            </button>
-          </div>
 
           <div className="sidebar-section">
             <div className="sidebar-label">
@@ -63,24 +73,6 @@ function Workspace() {
             </button>
           </div>
         </div>
-
-        <div className="sidebar-bottom">
-          <button className="workspace-nav">
-            <span>⚙</span>
-            Settings
-          </button>
-
-          <div className="user-mini">
-            <div className="user-avatar">R</div>
-
-            <div>
-              <strong>Ruchika</strong>
-              <small>Personal workspace</small>
-            </div>
-
-            <span className="user-more">•••</span>
-          </div>
-        </div>
       </aside>
 
       {/* Main workspace */}
@@ -93,22 +85,9 @@ function Workspace() {
             </span>
           </div>
 
-          <div className="header-actions">
-            <button className="header-button">
-              ⌕ <span>Search</span>
-              <kbd>⌘ K</kbd>
-            </button>
-
-            <button className="icon-button">
-              ♢
-            </button>
-
-            <button className="icon-button">
-              ?
-            </button>
-
-            <div className="header-avatar">R</div>
-          </div>
+            <div className="header-actions">
+              <ProfileMenu />
+            </div>
         </header>
 
         <div className="workspace-content">
@@ -120,7 +99,7 @@ function Workspace() {
               </span>
 
               <h1>
-                Good morning, Ruchika.
+                Hey, {user?.username || "there"}.
                 <br />
                 <span>What are we working on?</span>
               </h1>
@@ -160,7 +139,7 @@ function Workspace() {
               </div>
 
               <div className="card-metric">
-                <strong>24</strong>
+                <strong>{documents.length}</strong>
                 <span>documents indexed</span>
               </div>
             </Link>

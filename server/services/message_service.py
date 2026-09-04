@@ -8,6 +8,7 @@ def add_message(
     conversation_id: int,
     role: str,
     content: str,
+    sources=None,
 ):
     """
     Store a message in a conversation.
@@ -17,6 +18,7 @@ def add_message(
         conversation_id=conversation_id,
         role=role,
         content=content,
+        sources=sources or [],
     )
 
     db.add(message)
@@ -24,7 +26,6 @@ def add_message(
     db.refresh(message)
 
     return message
-
 
 def get_messages(
     db: Session,

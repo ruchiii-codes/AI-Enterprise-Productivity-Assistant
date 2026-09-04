@@ -2,20 +2,22 @@ from unittest.mock import patch
 
 from server.services.planner_service import Route
 from server.services.orchestrator_service import execute
-from server.services.multi_tool.tool_call import ToolCall
 
 
 def test_orchestrator_uses_single_tool_flow():
+    plan = {
+        "route": Route.TOOL,
+        "tool": "gmail",
+        "intent": "list_messages",
+        "parameters": {},
+    }
+
     with patch(
-        "server.services.orchestrator_service.select_tools",
-        return_value=[],
-    ), patch(
-        "server.services.tool_router.resolve_tool",
+        "server.services.tool_dispatcher.dispatch_tool",
         return_value="Single tool result",
     ):
-
         result = execute(
-            route=Route.TOOL,
+            plan=plan,
             question="Find my emails",
         )
 
@@ -25,48 +27,24 @@ def test_orchestrator_uses_single_tool_flow():
     }
 
 
-def test_orchestrator_uses_multi_tool_flow():
-    def gmail_tool():
-        return "Gmail result"
-
-    def calendar_tool():
-        return "Calendar result"
-
-    selected_tools = [
-        ToolCall(tool=gmail_tool),
-        ToolCall(tool=calendar_tool),
-    ]
-
-    expected_results = [
-        {
-            "success": True,
-            "tool": "gmail_tool",
-            "result": "Gmail result",
-        },
-        {
-            "success": True,
-            "tool": "calendar_tool",
-            "result": "Calendar result",
-        },
-    ]
+def test_orchestrator_uses_tool_flow_for_combined_request():
+    plan = {
+        "route": Route.TOOL,
+        "tool": "gmail",
+        "intent": "list_messages",
+        "parameters": {},
+    }
 
     with patch(
-        "server.services.orchestrator_service.select_tools",
-        return_value=selected_tools,
-    ), patch(
-        "server.services.orchestrator_service.execute_mcp_tools",
-        return_value=expected_results,
+        "server.services.tool_dispatcher.dispatch_tool",
+        return_value="Gmail result",
     ):
-
         result = execute(
-            route=Route.TOOL,
+            plan=plan,
             question="Check emails and calendar",
         )
 
     assert result == {
-        "answer": (
-            "📧 Gmail\n\nGmail result\n\n"
-            "📅 Calendar\n\nCalendar result"
-        ),
+        "answer": "Gmail result",
         "sources": [],
     }
