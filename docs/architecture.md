@@ -33,6 +33,7 @@ WorkMind is built with a React frontend and a FastAPI backend. The backend handl
                          └──────────┘              └── MCP
 
 
+---
 ## Main Components
 
 | Component | Purpose |
