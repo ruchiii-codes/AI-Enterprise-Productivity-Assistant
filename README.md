@@ -66,7 +66,7 @@ It combines RAG, agent-based routing, and integrations with Gmail, Google Calend
                             ┌──────────┐
                             │ ChromaDB │
                             └──────────┘
-
+```
 
 For the detailed architecture, see [Architecture Documentation](docs/architecture.md).
 
@@ -100,7 +100,9 @@ AI-Enterprise-Productivity-Assistant/
 ├── docs/              # Technical documentation
 ├── requirements.txt
 └── README.md
+```
 
+---
 
 ## Run Locally
 
@@ -117,6 +119,7 @@ pip install -r requirements.txt
 copy .env.example .env
 
 uvicorn server.main:app --reload
+```
 
 ### Frontend
 
@@ -124,6 +127,7 @@ uvicorn server.main:app --reload
 cd frontend
 npm install
 npm run dev
+```
 
 Add the required API keys, OAuth credentials, email configuration, and JWT settings to `.env`.
 
@@ -155,5 +159,6 @@ FastAPI Backend
       │
       ▼
 Elastic Beanstalk
+```
 
 See [Deployment Documentation](docs/deployment.md) for the deployment guide.
