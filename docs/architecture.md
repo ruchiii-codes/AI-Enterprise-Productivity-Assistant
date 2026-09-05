@@ -47,7 +47,7 @@ WorkMind is built with a React frontend and a FastAPI backend. The backend handl
 | ChromaDB | Vector storage and semantic search |
 | SQLite | User, conversation and application data |
 
----
+
 ```text
 ## 2. RAG Pipeline
 
