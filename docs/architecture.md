@@ -33,7 +33,7 @@ WorkMind is built with a React frontend and a FastAPI backend. The backend handl
                          └──────────┘              └── MCP
 
 ```
-
+```text
 ## Main Components
 
 | Component | Purpose |
@@ -46,7 +46,7 @@ WorkMind is built with a React frontend and a FastAPI backend. The backend handl
 | Tool Layer | Gmail, Calendar, GitHub and MCP operations |
 | ChromaDB | Vector storage and semantic search |
 | SQLite | User, conversation and application data |
-
+```
 
 ```text
 ## 2. RAG Pipeline
