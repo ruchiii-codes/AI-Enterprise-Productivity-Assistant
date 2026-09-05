@@ -44,13 +44,15 @@ WorkMind is built with a React frontend and a FastAPI backend. The backend handl
 | RAG | Document retrieval and context generation |
 | Tool Layer | Gmail, Calendar, GitHub and MCP operations |
 | ChromaDB | Vector storage and semantic search |
-| SQLite | User, conversation and application data |         
+| SQLite | User, conversation and application data |
 
+---
 
 ## 2. RAG Pipeline
 
 WorkMind uses Retrieval-Augmented Generation to answer questions using uploaded documents.
 
+```text
 PDF Upload
     ↓
 Text Extraction
@@ -87,16 +89,18 @@ Answer
 
 Additional retrieval techniques include query rewriting, multi-query retrieval, HyDE, and parent-child retrieval.
 
+---
 
 ## 3. Agentic AI & Orchestration
 
 WorkMind uses a planner-based approach to decide how a request should be handled.
 
+```text
 User Request
      ↓
    Planner
      ↓
-Route / Intent
+ Route / Intent
      │
  ┌───┼────────────┐
  ▼   ▼            ▼
@@ -115,53 +119,59 @@ RAG Summary     Tool
 | Retriever | Retrieves relevant document context |
 | Summarizer | Creates concise summaries |
 | Tool Dispatcher | Executes the selected tool |
-| Orchestrator | Coordinates multi-step workflows |              
+| Orchestrator | Coordinates multi-step workflows |
 
 WorkMind supports workflows where one tool's result is used by another tool.
+
 Examples:
 
-GitHub → Gmail
-GitHub → Calendar
-Calendar → Gmail
-Gmail → Calendar
+- GitHub → Gmail
+- GitHub → Calendar
+- Calendar → Gmail
+- Gmail → Calendar
 
+---
 
 ## 4. Productivity Integrations
 
-Gmail
+### Gmail
 
 WorkMind can:
 
-Search emails
-Read messages
-Summarize emails
-Send emails
-Use email results in workflows
-Google Calendar
+- Search emails
+- Read messages
+- Summarize emails
+- Send emails
+- Use email results in workflows
+
+### Google Calendar
 
 WorkMind can:
 
-View upcoming events
-Search events
-View tomorrow's events
-Create events
-Use calendar results in workflows
-GitHub
+- View upcoming events
+- Search events
+- View tomorrow's events
+- Create events
+- Use calendar results in workflows
+
+### GitHub
 
 WorkMind can:
 
-View the connected GitHub account
-List repositories
-View issues
-View pull requests
-Get repository details
-View recent activity
+- View the connected GitHub account
+- List repositories
+- View issues
+- View pull requests
+- Get repository details
+- View recent activity
 
+---
 
 ## 5. Model Context Protocol (MCP)
 
 WorkMind includes MCP support for connecting AI workflows with external tools.
 
+```text
 WorkMind Agent
       ↓
    MCP Client
@@ -177,6 +187,7 @@ MCP provides a standard interface for exposing tools and capabilities to the AI 
 
 The retrieval pipeline is evaluated by comparing different retrieval approaches.
 
+```text
 Semantic Retrieval
         ↓
 Hybrid Retrieval
@@ -191,6 +202,7 @@ Hybrid + Reranking
 | Hit Rate | Whether a relevant result was retrieved |
 | Failure Analysis | Common retrieval failure cases |
 
+---
 
 ## 7. Security
 
