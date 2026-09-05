@@ -22,7 +22,9 @@ Elastic Beanstalk
       ├── Google Calendar
       ├── GitHub
       └── LLM / AI Services
+```
 
+---
 
 ## 1. Production Preparation
 
@@ -41,7 +43,9 @@ Build the frontend:
 cd frontend
 npm install
 npm run build
+```
 
+---
 
 ## 2. Backend Deployment
 
@@ -52,6 +56,7 @@ The backend deployment should include:
 ```text
 server/
 requirements.txt
+```
 
 Configure the required production environment variables through AWS instead of storing them in the repository.
 
@@ -69,12 +74,17 @@ After the backend is deployed, update the frontend API configuration.
 
 ```text
 http://localhost:8000
+```
 
-Production:
+**Production:**
+
+```text
 https://<your-backend-domain>
+```
 
-Then deploy the frontend through AWS Amplify.      
+Then deploy the frontend through AWS Amplify.
 
+---
 
 ## 4. Environment Variables
 
@@ -90,23 +100,27 @@ WorkMind uses environment variables for application secrets and external service
 | Database | Database configuration |
 | Frontend | Backend API URL |
 
-Use .env.example as the reference.
+Use `.env.example` as the reference.
 
-Never commit the real .env file or other files containing secrets.
+Never commit the real `.env` file or other files containing secrets.
 
+---
 
 ## 5. CORS Configuration
 
 The backend must allow requests from the deployed frontend.
 
-Local:
+**Local:**
 
+```text
 http://localhost:5173
+```
 
 **Production:**
 
 ```text
-https://<your-backend-domain>
+https://<your-amplify-domain>
+```
 
 Update the backend CORS configuration before testing the live application.
 
@@ -135,11 +149,13 @@ The verification email must use the deployed frontend URL.
 
 ```text
 http://localhost:5173/verify-email
+```
 
 **Production:**
 
 ```text
 https://<your-frontend-domain>/verify-email
+```
 
 Make sure the backend generates the correct production verification link.
 
@@ -214,3 +230,4 @@ Configure CORS + OAuth
 Update Email Verification URL
         ↓
 Live Testing
+```
