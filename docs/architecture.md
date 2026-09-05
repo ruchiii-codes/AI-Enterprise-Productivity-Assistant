@@ -48,7 +48,7 @@ WorkMind is built with a React frontend and a FastAPI backend. The backend handl
 | SQLite | User, conversation and application data |
 
 ---
-```markdown
+```text
 ## 2. RAG Pipeline
 
 WorkMind uses Retrieval-Augmented Generation to answer questions using uploaded documents.
@@ -93,7 +93,7 @@ Answer
 
 Additional retrieval techniques include query rewriting, multi-query retrieval, HyDE, and parent-child retrieval.
 
-```markdown
+```text
 ## 3. Agentic AI & Orchestration
 
 WorkMind uses a planner-based approach to decide how a request should be handled.
@@ -115,7 +115,7 @@ RAG Summary     Tool
                   ↓
               Response
 ```
-```text
+
 | Component | Purpose |
 |---|---|
 | Planner | Determines the required route and action |
@@ -123,7 +123,7 @@ RAG Summary     Tool
 | Summarizer | Creates concise summaries |
 | Tool Dispatcher | Executes the selected tool |
 | Orchestrator | Coordinates multi-step workflows |
-```
+
 WorkMind supports workflows where one tool's result is used by another tool.
 
 Examples:
