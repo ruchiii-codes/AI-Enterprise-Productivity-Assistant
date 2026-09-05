@@ -68,23 +68,31 @@ It combines RAG, agent-based routing, and integrations with Gmail, Google Calend
                             └──────────┘
 
 
-For the detailed architecture, See docs/deployment.md for the deployment guide.
+For the detailed architecture, see [Architecture Documentation](docs/architecture.md).
+
+---
 
 ## Multi-Tool Workflows
 
-WorkMind can combine tools in a single request.
+WorkMind can combine multiple tools in a single request.
 
-GitHub → Gmail
+**GitHub → Gmail**
+
 Find my recent GitHub activity and email me a summary.
 
-Calendar → Gmail
+**Calendar → Gmail**
+
 Check my calendar for tomorrow and email me a summary.
 
-Gmail → Calendar
+**Gmail → Calendar**
+
 Find my recent WorkMind emails and add a summary to my calendar.
+
+---
 
 ## Project Structure
 
+```text
 AI-Enterprise-Productivity-Assistant/
 ├── frontend/          # React frontend
 ├── server/            # FastAPI backend
@@ -98,6 +106,7 @@ AI-Enterprise-Productivity-Assistant/
 
 ### Backend
 
+```bash
 git clone https://github.com/ruchiii-codes/AI-Enterprise-Productivity-Assistant.git
 cd AI-Enterprise-Productivity-Assistant
 
@@ -111,13 +120,16 @@ uvicorn server.main:app --reload
 
 ### Frontend
 
+```bash
 cd frontend
 npm install
 npm run dev
 
-Add the required API keys, OAuth credentials, email configuration, and JWT settings to .env.
-Never commit the real .env file.
+Add the required API keys, OAuth credentials, email configuration, and JWT settings to `.env`.
 
+> Never commit the real `.env` file.
+
+---
 
 ## Documentation
 
@@ -126,6 +138,7 @@ Never commit the real .env file.
 | [Architecture](docs/architecture.md) | RAG, agents, integrations, MCP, evaluation, and security |
 | [Deployment](docs/deployment.md) | AWS deployment and production configuration |
 
+---
 
 ## Deployment
 
@@ -143,4 +156,4 @@ FastAPI Backend
       ▼
 Elastic Beanstalk
 
-See docs/deployment.md for the deployment guide.
+See [Deployment Documentation](docs/deployment.md) for the deployment guide.

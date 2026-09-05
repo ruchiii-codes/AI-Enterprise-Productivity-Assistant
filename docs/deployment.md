@@ -28,15 +28,16 @@ Elastic Beanstalk
 
 Before deploying:
 
-Make sure the project runs correctly locally.
-Confirm all backend dependencies are in requirements.txt.
-Confirm the frontend builds successfully.
-Keep secrets out of the source code.
-Make sure .env is not committed to Git.
-Keep .env.example updated.
+- Make sure the project runs correctly locally.
+- Confirm all backend dependencies are in `requirements.txt`.
+- Confirm the frontend builds successfully.
+- Keep secrets out of the source code.
+- Make sure `.env` is not committed to Git.
+- Keep `.env.example` updated.
 
 Build the frontend:
 
+```bash
 cd frontend
 npm install
 npm run build
@@ -48,6 +49,7 @@ The FastAPI backend will be deployed using AWS Elastic Beanstalk.
 
 The backend deployment should include:
 
+```text
 server/
 requirements.txt
 
@@ -55,14 +57,17 @@ Configure the required production environment variables through AWS instead of s
 
 The deployed backend must be accessible through an HTTPS URL.
 
+---
 
 ## 3. Frontend Deployment
 
 The React frontend will be deployed using AWS Amplify.
 
-After the backend is deployed, update the frontend API configuration:
+After the backend is deployed, update the frontend API configuration.
 
-Local:
+**Local:**
+
+```text
 http://localhost:8000
 
 Production:
@@ -98,12 +103,14 @@ Local:
 
 http://localhost:5173
 
-Production:
+**Production:**
 
-https://<your-amplify-domain>
+```text
+https://<your-backend-domain>
 
 Update the backend CORS configuration before testing the live application.
 
+---
 
 ## 6. OAuth Configuration
 
@@ -116,23 +123,27 @@ Update the OAuth configuration with the production URLs:
 - Google Calendar OAuth redirect URI
 - GitHub OAuth callback URL
 
-Remove or replace development localhost URLs where required.
+Remove or replace development `localhost` URLs where required.
 
+---
 
 ## 7. Email Verification
 
 The verification email must use the deployed frontend URL.
 
-Local:
+**Local:**
 
+```text
 http://localhost:5173/verify-email
 
-Production:
+**Production:**
 
+```text
 https://<your-frontend-domain>/verify-email
 
 Make sure the backend generates the correct production verification link.
 
+---
 
 ## 8. Production Checklist
 
@@ -149,6 +160,7 @@ Before making WorkMind public:
 - [ ] Rate limiting enabled
 - [ ] Protected APIs verified
 
+---
 
 ## 9. Post-Deployment Testing
 
@@ -180,11 +192,13 @@ Test the live application for:
 - Calendar → Gmail
 - Gmail → Calendar
 
-Also verify that no production feature is still using a local localhost URL. 
+Also verify that no production feature is still using a local `localhost` URL.
 
+---
 
 ## Deployment Flow
 
+```text
 Production Preparation
         ↓
 Backend → AWS Elastic Beanstalk
