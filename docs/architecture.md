@@ -33,7 +33,7 @@ WorkMind is built with a React frontend and a FastAPI backend. The backend handl
                          └──────────┘              └── MCP
 
 ```
-```text
+
 ## Main Components
 
 | Component | Purpose |
@@ -46,13 +46,14 @@ WorkMind is built with a React frontend and a FastAPI backend. The backend handl
 | Tool Layer | Gmail, Calendar, GitHub and MCP operations |
 | ChromaDB | Vector storage and semantic search |
 | SQLite | User, conversation and application data |
-```
 
-```text
+---
+
 ## 2. RAG Pipeline
 
 WorkMind uses Retrieval-Augmented Generation to answer questions using uploaded documents.
 
+```text
 PDF Upload
     ↓
 Text Extraction
@@ -76,10 +77,8 @@ Context Compression
 LLM
     ↓
 Answer
-
 ```
 
-```text
 | Component | Purpose |
 |---|---|
 | Embeddings | Represent document chunks as vectors |
@@ -89,16 +88,15 @@ Answer
 | Reranker | Reorder results by relevance |
 | Context Compression | Keep only useful retrieved information |
 
-```
-
 Additional retrieval techniques include query rewriting, multi-query retrieval, HyDE, and parent-child retrieval.
 
-```text
+---
+
 ## 3. Agentic AI & Orchestration
 
 WorkMind uses a planner-based approach to decide how a request should be handled.
 
-
+```text
 User Request
      ↓
    Planner
@@ -182,9 +180,10 @@ WorkMind Agent
    MCP Server
       ↓
  External Tools
+```
 
 MCP provides a standard interface for exposing tools and capabilities to the AI system.
-
+---
 
 ## 6. Evaluation
 
@@ -196,6 +195,7 @@ Semantic Retrieval
 Hybrid Retrieval
         ↓
 Hybrid + Reranking
+```
 
 | Metric | What it measures |
 |---|---|
