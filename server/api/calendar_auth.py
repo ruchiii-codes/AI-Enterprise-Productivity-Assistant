@@ -15,6 +15,7 @@ from server.config import (
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
     GOOGLE_CALENDAR_REDIRECT_URI,
+    FRONTEND_URL,
 )
 
 
@@ -220,5 +221,5 @@ def calendar_callback(
     db.commit()
 
     return RedirectResponse(
-        url="http://localhost:5173/tools"
+        url=f"{FRONTEND_URL}/tools"
     )

@@ -15,6 +15,7 @@ from server.config import (
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
     GOOGLE_REDIRECT_URI,
+    FRONTEND_URL,
 )
 
 
@@ -230,5 +231,5 @@ def gmail_callback(
 
     # Return to frontend
     return RedirectResponse(
-        url="http://localhost:5173/tools"
+        url=f"{FRONTEND_URL}/tools"
     )

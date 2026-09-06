@@ -13,6 +13,7 @@ from server.config import (
     GITHUB_CLIENT_ID,
     GITHUB_CLIENT_SECRET,
     GITHUB_REDIRECT_URI,
+    FRONTEND_URL,
 )
 
 router = APIRouter(
@@ -188,5 +189,5 @@ def github_callback(
 
     # Return to frontend
     return RedirectResponse(
-        url="http://localhost:5173/tools"
+        url=f"{FRONTEND_URL}/tools"
     )

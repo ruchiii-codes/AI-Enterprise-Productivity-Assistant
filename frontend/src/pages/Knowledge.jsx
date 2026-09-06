@@ -4,7 +4,8 @@ import Brand from "../components/Brand";
 import "../styles/workspace.css";
 import ProfileMenu from "../components/ProfileMenu";
 
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
 function Knowledge() {
   const fileInputRef = useRef(null);
