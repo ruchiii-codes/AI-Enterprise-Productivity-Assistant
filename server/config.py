@@ -33,6 +33,12 @@ GOOGLE_CALENDAR_REDIRECT_URI = os.getenv(
     "http://localhost:8000/auth/calendar/callback",
 )
 
+# Frontend URL
+FRONTEND_URL = os.getenv(
+    "FRONTEND_URL",
+    "http://localhost:5173",
+)
+
 # Email / SMTP
 EMAIL_HOST = os.getenv("EMAIL_HOST")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))

@@ -122,9 +122,16 @@ async def request_monitoring(request: Request, call_next):
 # -----------------------------
 # CORS Configuration
 # -----------------------------
+import os
+
 origins = [
     "http://localhost:5173",
 ]
+
+frontend_url = os.getenv("FRONTEND_URL")
+
+if frontend_url:
+    origins.append(frontend_url)
 
 app.add_middleware(
     CORSMiddleware,

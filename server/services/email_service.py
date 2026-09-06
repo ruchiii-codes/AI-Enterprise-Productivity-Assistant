@@ -6,6 +6,7 @@ from server.config import (
     EMAIL_PORT,
     EMAIL_USERNAME,
     EMAIL_PASSWORD,
+    FRONTEND_URL,
 )
 
 
@@ -14,7 +15,7 @@ def send_verification_email(
     verification_token: str,
 ):
     verification_link = (
-        f"http://localhost:5173/verify-email?token={verification_token}"
+        f"{FRONTEND_URL}/verify-email?token={verification_token}"
     )
 
     message = EmailMessage()

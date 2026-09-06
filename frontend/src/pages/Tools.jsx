@@ -4,6 +4,9 @@ import Brand from "../components/Brand";
 import "../styles/workspace.css";
 import ProfileMenu from "../components/ProfileMenu";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+
 function Tools() {
   const [error, setError] = useState("");
   // GitHub state
@@ -37,7 +40,7 @@ function Tools() {
       // -------------------------
       try {
         const response = await fetch(
-          "http://localhost:8000/auth/github/status",
+          `${API_BASE_URL}/auth/github/status`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -67,7 +70,7 @@ function Tools() {
       // -------------------------
       try {
         const response = await fetch(
-          "http://localhost:8000/auth/gmail/status",
+          `${API_BASE_URL}/auth/gmail/status`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -97,7 +100,7 @@ function Tools() {
       // -------------------------
       try {
         const response = await fetch(
-          "http://localhost:8000/auth/calendar/status",
+          `${API_BASE_URL}/auth/calendar/status`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -139,7 +142,7 @@ function Tools() {
 
     try {
       const response = await fetch(
-        "http://localhost:8000/auth/github/start",
+        `${API_BASE_URL}/auth/github/start`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -172,7 +175,7 @@ function Tools() {
 
     try {
       const response = await fetch(
-        "http://localhost:8000/auth/github/disconnect",
+        `${API_BASE_URL}/auth/github/disconnect`,
         {
           method: "DELETE",
           headers: {
@@ -206,7 +209,7 @@ function Tools() {
 
     try {
       const response = await fetch(
-        "http://localhost:8000/auth/gmail/start",
+        `${API_BASE_URL}/auth/gmail/start`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -239,7 +242,7 @@ function Tools() {
 
     try {
       const response = await fetch(
-        "http://localhost:8000/auth/gmail/disconnect",
+        `${API_BASE_URL}/auth/gmail/disconnect`,
         {
           method: "DELETE",
           headers: {
@@ -273,7 +276,7 @@ function Tools() {
 
     try {
       const response = await fetch(
-        "http://localhost:8000/auth/calendar/start",
+        `${API_BASE_URL}/auth/calendar/start`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -306,7 +309,7 @@ function Tools() {
 
     try {
       const response = await fetch(
-        "http://localhost:8000/auth/calendar/disconnect",
+        `${API_BASE_URL}/auth/calendar/disconnect`,
         {
           method: "DELETE",
           headers: {
