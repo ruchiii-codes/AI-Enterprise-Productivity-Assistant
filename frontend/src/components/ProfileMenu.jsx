@@ -1,26 +1,26 @@
 import { useEffect, useRef, useState } from "react";
-import { getCurrentUser } from "../api/auth";
+import { useNavigate } from "react-router-dom";
+
+import {
+  CONVERSATION_STORAGE_KEY,
+  THEME_STORAGE_KEY,
+} from "../config/env";
+import { useAuth } from "../hooks/useAuth";
 
 function ProfileMenu() {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState(null);
   const [theme, setTheme] = useState(
-    localStorage.getItem("workmind_theme") || "dark"
+    () => localStorage.getItem(THEME_STORAGE_KEY) || "dark"
   );
 
   const menuRef = useRef(null);
 
   useEffect(() => {
-    getCurrentUser()
-      .then(setUser)
-      .catch(() => {
-        setUser(null);
-      });
-  }, []);
-
-  useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("workmind_theme", theme);
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [theme]);
 
   useEffect(() => {
@@ -41,9 +41,11 @@ function ProfileMenu() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("workmind_conversation_id");
-    window.location.href = "/login";
+    logout();
+    localStorage.removeItem(CONVERSATION_STORAGE_KEY);
+
+    // Client-side navigation rather than a full page reload.
+    navigate("/login", { replace: true });
   };
 
   const displayName = user?.username || "User";

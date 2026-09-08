@@ -1,5 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./app/ProtectedRoute";
+
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import VerifyEmail from "./pages/VerifyEmail";
@@ -15,25 +18,71 @@ import "./App.css";
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
 
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/verify-email" element={<VerifyEmail />} />
+          {/* Public */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
 
-        <Route path="/workspace" element={<Workspace />} />
-        <Route path="/chat" element={<Chat />} />
-        <Route path="/knowledge" element={<Knowledge />} />
-        <Route path="/agents" element={<Agents />} />
-        <Route path="/tools" element={<Tools />} />
-        <Route path="/settings" element={<Settings />} />
+          {/* Authenticated */}
+          <Route
+            path="/workspace"
+            element={
+              <ProtectedRoute>
+                <Workspace />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chat"
+            element={
+              <ProtectedRoute>
+                <Chat />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/knowledge"
+            element={
+              <ProtectedRoute>
+                <Knowledge />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/agents"
+            element={
+              <ProtectedRoute>
+                <Agents />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tools"
+            element={
+              <ProtectedRoute>
+                <Tools />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="*"
-          element={<Navigate to="/login" replace />}
-        />
-      </Routes>
+          <Route
+            path="*"
+            element={<Navigate to="/login" replace />}
+          />
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Brand from "../components/Brand";
-import { loginUser } from "../api/auth";
+import { useAuth } from "../hooks/useAuth";
 import "../styles/auth.css";
 
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
 
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -14,6 +16,9 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Where ProtectedRoute wanted to send them before the redirect to login.
+  const destination = location.state?.from?.pathname || "/workspace";
+
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -21,11 +26,9 @@ function Login() {
     setLoading(true);
 
     try {
-      const data = await loginUser(email, password);
+      await login(email, password);
 
-      localStorage.setItem("access_token", data.access_token);
-
-      navigate("/workspace");
+      navigate(destination, { replace: true });
     } catch (error) {
       setError(error.message);
     } finally {
