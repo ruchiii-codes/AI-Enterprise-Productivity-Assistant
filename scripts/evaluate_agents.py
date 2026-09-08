@@ -1,6 +1,7 @@
 import json
 
-from server.services.agent_evaluation_service import evaluate_agents
+from server.config import settings
+from server.services.evaluation.agent_evaluation_service import evaluate_agents
 
 
 def main():
@@ -23,8 +24,10 @@ def main():
         print()
 
 
+    report_path = settings.DATA_DIR / "agent_evaluation_report.json"
+
     with open(
-        "data/agent_evaluation_report.json",
+        report_path,
         "w",
         encoding="utf-8",
     ) as f:
@@ -35,7 +38,7 @@ def main():
             indent=4,
         )
 
-    print("Report saved to data/agent_evaluation_report.json")
+    print(f"Report saved to {report_path}")
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from server.auth.dependencies import get_current_user
 from server.db.base import get_db
 from server.db.models import User
-from server.services.message_service import (
+from server.services.conversations.message_service import (
     get_messages,
 )
 

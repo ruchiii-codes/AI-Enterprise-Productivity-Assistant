@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from server.services.query_rewrite_service import (
+from server.services.rag.query_rewrite_service import (
     query_rewrite_cache,
     rewrite_query,
 )
@@ -10,7 +10,7 @@ def test_rewrite_query():
     query_rewrite_cache.clear()
 
     with patch(
-        "server.services.query_rewrite_service.generate_response",
+        "server.services.rag.query_rewrite_service.generate_response",
         return_value="AI enterprise assistant architecture",
     ) as mock_generate:
 
@@ -26,7 +26,7 @@ def test_rewrite_query_uses_cache():
     query_rewrite_cache.clear()
 
     with patch(
-        "server.services.query_rewrite_service.generate_response",
+        "server.services.rag.query_rewrite_service.generate_response",
         return_value="AI enterprise assistant architecture",
     ) as mock_generate:
 

@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
-from server.services.orchestrator_service import execute
-from server.services.planner_service import Route
+from server.services.agents.orchestrator_service import execute
+from server.services.agents.planner_service import Route
 
 
 def test_orchestrator_uses_single_tool_flow():
@@ -13,7 +13,7 @@ def test_orchestrator_uses_single_tool_flow():
     }
 
     with patch(
-        "server.services.tool_dispatcher.dispatch_tool",
+        "server.services.tools.tool_dispatcher.dispatch_tool",
         return_value="Single tool result",
     ):
         result = execute(
@@ -36,7 +36,7 @@ def test_orchestrator_uses_tool_flow_for_combined_request():
     }
 
     with patch(
-        "server.services.tool_dispatcher.dispatch_tool",
+        "server.services.tools.tool_dispatcher.dispatch_tool",
         return_value="Gmail result",
     ):
         result = execute(

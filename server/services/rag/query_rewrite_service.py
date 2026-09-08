@@ -1,4 +1,4 @@
-from server.services.llm_service import generate_response
+from server.services.providers.llm_service import generate_response
 from server.utils.cache import TTLCache
 
 query_rewrite_cache = TTLCache(ttl_seconds=300)

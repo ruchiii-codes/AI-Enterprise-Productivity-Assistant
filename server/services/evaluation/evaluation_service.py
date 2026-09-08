@@ -1,7 +1,7 @@
 import json
 
 from server.config import settings
-from server.services.search_service import search_documents
+from server.services.rag.search_service import search_documents
 
 
 def load_evaluation_questions():

@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from server.auth.dependencies import get_current_user
 from server.db.base import get_db
 from server.db.models import Conversation, Document, User
-from server.services.document_processor import process_document
+from server.services.rag.document_processor import process_document
 
 router = APIRouter(
     prefix="/upload",

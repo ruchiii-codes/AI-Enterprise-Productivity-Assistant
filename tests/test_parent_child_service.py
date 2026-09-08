@@ -1,4 +1,4 @@
-from server.services.parent_child_service import create_parent_child_chunks
+from server.services.rag.parent_child_service import create_parent_child_chunks
 
 
 def test_create_parent_child_chunks():

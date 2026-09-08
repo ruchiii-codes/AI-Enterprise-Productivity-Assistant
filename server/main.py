@@ -35,24 +35,24 @@ from server.db import models  # noqa: F401
 from server.db.base import get_db
 from server.db.models import Document, User
 from server.schemas.chat import ChatRequest
-from server.services.conversation_service import (
-    get_conversation,
-    update_conversation_title,
-)
-from server.services.llm_service import (
-    format_tool_response,
-    generate_response,
-)
-from server.services.message_service import (
-    add_message,
-    get_recent_messages,
-)
-from server.services.orchestrator_service import execute
-from server.services.planner_service import (
+from server.services.agents.orchestrator_service import execute
+from server.services.agents.planner_service import (
     Route,
     plan_route,
 )
-from server.services.prompt_builder import build_messages
+from server.services.agents.prompt_builder import build_messages
+from server.services.conversations.conversation_service import (
+    get_conversation,
+    update_conversation_title,
+)
+from server.services.conversations.message_service import (
+    add_message,
+    get_recent_messages,
+)
+from server.services.providers.llm_service import (
+    format_tool_response,
+    generate_response,
+)
 from server.utils.rate_limiter import limiter
 
 logging.basicConfig(

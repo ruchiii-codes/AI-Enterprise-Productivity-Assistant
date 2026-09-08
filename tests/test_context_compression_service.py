@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from server.services.context_compression_service import compress_context
+from server.services.rag.context_compression_service import compress_context
 
 
 def test_compress_context():
@@ -16,7 +16,7 @@ def test_compress_context():
     ]
 
     with patch(
-        "server.services.context_compression_service.generate_response",
+        "server.services.rag.context_compression_service.generate_response",
         return_value=mock_response,
     ):
         result = compress_context(

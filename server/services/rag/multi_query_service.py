@@ -1,4 +1,4 @@
-from server.services.llm_service import generate_response
+from server.services.providers.llm_service import generate_response
 
 
 def generate_multi_queries(question: str, num_queries: int = 3) -> list[str]:

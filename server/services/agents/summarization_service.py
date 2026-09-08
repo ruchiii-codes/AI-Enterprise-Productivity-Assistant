@@ -1,9 +1,9 @@
 import os
 
 from server.config import settings
-from server.services.llm_service import generate_response
-from server.services.pdf_service import extract_text_from_pdf
-from server.services.retriever_agent import retrieve
+from server.services.agents.retriever_agent import retrieve
+from server.services.providers.llm_service import generate_response
+from server.services.rag.pdf_service import extract_text_from_pdf
 
 UPLOAD_FOLDER = str(settings.UPLOAD_DIR)
 

@@ -1,17 +1,17 @@
 from fastapi import UploadFile
 from pypdf import PdfReader
 
-from server.services import bm25_store
-from server.services.bm25_service import create_bm25_index
-from server.services.chroma_service import (
+from server.services.rag import bm25_store
+from server.services.rag.bm25_service import create_bm25_index
+from server.services.rag.chroma_service import (
     get_collection_count,
     store_embeddings,
 )
-from server.services.embedding_service import generate_embeddings
-from server.services.parent_child_service import create_parent_child_chunks
-from server.services.pdf_service import extract_text_from_pdf
-from server.services.text_cleaner import clean_text
-from server.services.upload_service import save_uploaded_file
+from server.services.rag.embedding_service import generate_embeddings
+from server.services.rag.parent_child_service import create_parent_child_chunks
+from server.services.rag.pdf_service import extract_text_from_pdf
+from server.services.rag.text_cleaner import clean_text
+from server.services.rag.upload_service import save_uploaded_file
 
 
 def process_document(

@@ -1,4 +1,4 @@
-from server.services.llm_service import generate_response
+from server.services.providers.llm_service import generate_response
 
 
 def generate_hypothetical_document(question: str) -> str:

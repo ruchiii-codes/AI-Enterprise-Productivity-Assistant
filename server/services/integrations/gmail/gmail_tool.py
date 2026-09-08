@@ -1,3 +1,4 @@
+from server.services.agents.summarization_service import summarize_gmail_message
 from server.services.integrations.gmail.gmail_formatter import (
     format_message,
     format_messages,
@@ -9,7 +10,6 @@ from server.services.integrations.gmail.gmail_service import (
     search_messages,
     send_email,
 )
-from server.services.summarization_service import summarize_gmail_message
 
 
 def gmail_get_profile(user_id: int):

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from server.auth.dependencies import get_current_user
 from server.db.base import get_db
 from server.db.models import User
-from server.services.conversation_service import (
+from server.services.conversations.conversation_service import (
     create_conversation,
     delete_conversation,
     get_user_conversations,

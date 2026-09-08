@@ -40,5 +40,5 @@ ignore = [
 "server/services/mcp/mcp_server.py" = ["E402"]
 # These modules embed multi-line LLM prompts whose indentation is significant;
 # stripping "trailing whitespace" inside them would change the prompt text.
-"server/services/llm_service.py" = ["W293"]
-"server/services/query_rewrite_service.py" = ["W293"]
+"server/services/providers/llm_service.py" = ["W293"]
+"server/services/rag/query_rewrite_service.py" = ["W293"]

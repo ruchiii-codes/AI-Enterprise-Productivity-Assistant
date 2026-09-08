@@ -1,6 +1,7 @@
 import json
 
-from server.services.evaluation_service import evaluate_retriever
+from server.config import settings
+from server.services.evaluation.evaluation_service import evaluate_retriever
 
 
 def main():
@@ -18,7 +19,7 @@ def main():
     print("=======================================\n")
 
     with open(
-        "data/evaluation_report.json",
+        settings.DATA_DIR / "evaluation_report.json",
         "w",
         encoding="utf-8",
     ) as file:

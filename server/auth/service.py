@@ -9,7 +9,7 @@ from server.auth.security import (
 )
 from server.db.models import User
 from server.schemas.auth import UserRegister
-from server.services.email_service import send_verification_email
+from server.services.providers.email_service import send_verification_email
 
 
 def register_user(

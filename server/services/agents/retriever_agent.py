@@ -1,4 +1,4 @@
-from server.services.search_service import search_documents
+from server.services.rag.search_service import search_documents
 
 
 def retrieve(

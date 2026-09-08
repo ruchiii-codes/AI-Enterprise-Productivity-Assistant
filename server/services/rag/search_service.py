@@ -1,15 +1,15 @@
-from server.services import bm25_store
-from server.services.bm25_service import bm25_search
-from server.services.chroma_service import (
+from server.services.rag import bm25_store
+from server.services.rag.bm25_service import bm25_search
+from server.services.rag.chroma_service import (
     get_parent_documents,
     search_embeddings,
 )
-from server.services.embedding_service import generate_query_embedding
-from server.services.hyde_service import generate_hypothetical_document
-from server.services.multi_query_service import generate_multi_queries
-from server.services.prompt_service import build_prompt
-from server.services.query_rewrite_service import rewrite_query
-from server.services.reranker_service import rerank_documents
+from server.services.rag.embedding_service import generate_query_embedding
+from server.services.rag.hyde_service import generate_hypothetical_document
+from server.services.rag.multi_query_service import generate_multi_queries
+from server.services.rag.prompt_service import build_prompt
+from server.services.rag.query_rewrite_service import rewrite_query
+from server.services.rag.reranker_service import rerank_documents
 
 
 def search_documents(

@@ -1,5 +1,8 @@
 from datetime import datetime, timedelta, timezone
 
+from server.services.agents.planner_service import Route
+from server.services.agents.retriever_agent import retrieve
+from server.services.agents.summarization_service import summarize
 from server.services.integrations.calendar.calendar_tool import (
     calendar_create_event,
 )
@@ -9,10 +12,7 @@ from server.services.integrations.gmail.gmail_tool import (
     gmail_search_messages,
     gmail_send_email,
 )
-from server.services.llm_service import generate_response
-from server.services.planner_service import Route
-from server.services.retriever_agent import retrieve
-from server.services.summarization_service import summarize
+from server.services.providers.llm_service import generate_response
 
 
 def execute(
@@ -62,7 +62,7 @@ def execute(
     # -----------------------------
     elif route == Route.TOOL:
 
-        from server.services.tool_dispatcher import dispatch_tool
+        from server.services.tools.tool_dispatcher import dispatch_tool
 
         tool = plan.get("tool")
         intent = plan.get("intent")

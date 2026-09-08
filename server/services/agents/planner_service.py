@@ -1,7 +1,7 @@
 import logging
 from enum import Enum
 
-from server.services.llm_service import classify_query
+from server.services.providers.llm_service import classify_query
 
 logger = logging.getLogger(__name__)
 

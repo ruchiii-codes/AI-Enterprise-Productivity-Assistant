@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from server.services.multi_query_service import generate_multi_queries
+from server.services.rag.multi_query_service import generate_multi_queries
 
 
 def test_generate_multi_queries():
@@ -9,7 +9,7 @@ Handling authentication errors in Python
 Python login and token error handling"""
 
     with patch(
-        "server.services.multi_query_service.generate_response",
+        "server.services.rag.multi_query_service.generate_response",
         return_value=mock_response,
     ):
         queries = generate_multi_queries(

@@ -1,7 +1,7 @@
 import json
 
 from server.config import settings
-from server.services.planner_service import plan_route
+from server.services.agents.planner_service import plan_route
 
 
 def evaluate_agents():

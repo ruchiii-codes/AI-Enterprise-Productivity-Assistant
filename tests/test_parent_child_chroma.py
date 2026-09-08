@@ -1,4 +1,4 @@
-from server.services.chroma_service import get_parent_documents
+from server.services.rag.chroma_service import get_parent_documents
 
 
 def test_get_parent_documents():

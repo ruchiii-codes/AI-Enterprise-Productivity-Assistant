@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from server.services.hyde_service import generate_hypothetical_document
+from server.services.rag.hyde_service import generate_hypothetical_document
 
 
 def test_generate_hypothetical_document():
@@ -10,7 +10,7 @@ def test_generate_hypothetical_document():
     )
 
     with patch(
-        "server.services.hyde_service.generate_response",
+        "server.services.rag.hyde_service.generate_response",
         return_value=mock_response,
     ):
         result = generate_hypothetical_document(
