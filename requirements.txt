@@ -14,6 +14,8 @@ python-dotenv==1.2.2
 
 # --- Database ---
 SQLAlchemy==2.0.51
+# Runtime, not dev-only: the container entrypoint runs `alembic upgrade head`.
+alembic==1.19.2
 
 # --- Auth ---
 python-jose==3.5.0

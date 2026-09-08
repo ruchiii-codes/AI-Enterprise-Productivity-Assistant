@@ -94,11 +94,34 @@ Find my recent WorkMind emails and add a summary to my calendar.
 
 ```text
 AI-Enterprise-Productivity-Assistant/
-├── frontend/          # React frontend
-├── server/            # FastAPI backend
-├── tests/             # Tests
-├── docs/              # Technical documentation
-├── requirements.txt
+├── frontend/                   # React frontend
+├── server/                     # FastAPI backend
+│   ├── main.py                 # App factory, middleware, router registration
+│   ├── config.py               # Typed settings (pydantic-settings)
+│   ├── api/                    # HTTP routers (thin)
+│   ├── auth/                   # JWT, password hashing, dependencies
+│   ├── db/                     # Engine, session, SQLAlchemy models
+│   ├── schemas/                # Pydantic request/response models
+│   ├── services/
+│   │   ├── rag/                # Ingestion + retrieval pipeline
+│   │   ├── agents/             # Planner, orchestrator, chat, summarization
+│   │   ├── tools/              # Tool dispatch
+│   │   ├── conversations/      # Conversation + message persistence
+│   │   ├── integrations/       # Gmail, Calendar, GitHub
+│   │   ├── mcp/                # MCP client + server
+│   │   ├── multi_tool/         # Multi-tool selection and execution
+│   │   ├── providers/          # LLM and email clients
+│   │   └── evaluation/         # Retrieval and agent evaluation
+│   └── utils/                  # Cache, rate limiter
+├── alembic/                    # Database migrations
+├── scripts/                    # Evaluation entry points
+├── tests/                      # Tests
+├── docs/                       # Technical documentation
+├── Dockerfile
+├── pyproject.toml
+├── requirements.txt            # Direct dependencies
+├── requirements-dev.txt        # Test + lint tooling
+├── requirements.lock.txt       # Exact resolved environment
 └── README.md
 ```
 
@@ -115,10 +138,32 @@ cd AI-Enterprise-Productivity-Assistant
 python -m venv .venv
 .venv\Scripts\activate
 
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 copy .env.example .env
 
+# Create/upgrade the database schema
+alembic upgrade head
+
 uvicorn server.main:app --reload
+```
+
+`OPENROUTER_API_KEY` and `JWT_SECRET_KEY` are required; the app fails at
+startup with a clear message if either is missing.
+
+### Tests
+
+```bash
+pytest
+ruff check server tests
+```
+
+### Database migrations
+
+Schema changes are managed by Alembic, never by editing tables by hand:
+
+```bash
+alembic revision --autogenerate -m "describe the change"
+alembic upgrade head
 ```
 
 ### Frontend

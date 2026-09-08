@@ -1,11 +1,39 @@
+# Virtualenv and caches
 .venv
 __pycache__
 *.pyc
+.pytest_cache
+.ruff_cache
+
+# Secrets and local credentials
 .env
+credentials.json
+token.json
+credentials/
+
+# VCS and CI
 .git
 .gitignore
-frontend/node_modules
-frontend/dist
-data/chroma_db
-data/uploads
+.github
+
+# Local data and artifacts (the image creates empty data dirs itself)
 assistant.db
+*.db
+backups/
+data/uploads
+data/chroma_db
+data/*_report.json
+
+# Frontend (deployed separately)
+frontend/
+dist/
+build/
+
+# Dev-only
+tests/
+scripts/
+docs/
+requirements-dev.txt
+requirements.lock.txt
+pyproject.toml
+*.zip

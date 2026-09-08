@@ -51,16 +51,65 @@ npm run build
 
 The FastAPI backend will be deployed using AWS Elastic Beanstalk.
 
-The backend deployment should include:
+The backend deployment must include:
 
 ```text
-server/
+server/            # application code
+alembic/           # migrations
+alembic.ini
 requirements.txt
+Dockerfile
+docker-entrypoint.sh
 ```
 
 Configure the required production environment variables through AWS instead of storing them in the repository.
 
 The deployed backend must be accessible through an HTTPS URL.
+
+### Container
+
+The image runs migrations before starting the server, so a deploy applies
+schema changes automatically:
+
+```bash
+docker build -t workmind-backend .
+docker run -p 8000:8000 --env-file .env -v workmind-data:/app/data workmind-backend
+```
+
+Notes:
+
+- `/app/data` is a volume. Uploads, the ChromaDB vector store and the SQLite
+  database live there; without the volume they are lost on every restart.
+- The container runs as a non-root user and exposes `/health` for the
+  load balancer.
+- `WEB_CONCURRENCY` defaults to **1**. Multiple workers against one SQLite
+  file produce "database is locked" errors. Raise it only after pointing
+  `DATABASE_URL` at Postgres/RDS.
+
+### Persistence
+
+SQLite on a container filesystem is not suitable for production. For a real
+deployment, provision RDS and set:
+
+```text
+DATABASE_URL=postgresql+psycopg://user:password@host:5432/workmind
+```
+
+Then run `alembic upgrade head` against it. No code changes are required —
+the URL is the only thing that differs.
+
+### Migrations
+
+Never edit the schema by hand. To change it:
+
+```bash
+alembic revision --autogenerate -m "describe the change"
+alembic upgrade head
+```
+
+An existing database that predates Alembic is brought under management with
+`alembic stamp head`, which records the current revision without re-running
+DDL.
 
 ---
 
