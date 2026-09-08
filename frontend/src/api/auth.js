@@ -43,3 +43,24 @@ export function verifyEmail(token) {
     errorMessage: "Email verification failed.",
   });
 }
+
+/**
+ * Ask for a reset link. The response is identical whether or not the address
+ * has an account, so the caller must not treat success as confirmation that
+ * the email exists.
+ */
+export function requestPasswordReset(email) {
+  return api.post(
+    "/auth/forgot-password",
+    { email },
+    { auth: false, errorMessage: "Unable to send the reset link." }
+  );
+}
+
+export function resetPassword(token, newPassword) {
+  return api.post(
+    "/auth/reset-password",
+    { token, new_password: newPassword },
+    { auth: false, errorMessage: "Unable to reset your password." }
+  );
+}

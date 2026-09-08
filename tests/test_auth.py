@@ -13,6 +13,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from server.auth.service import hash_reset_token
 from server.db.base import Base, get_db
 from server.db.models import User
 from server.main import app
@@ -49,13 +50,21 @@ def db_session(tmp_path):
 def client(db_session, monkeypatch):
     """A TestClient wired to the temporary database, with email stubbed."""
     sent = []
+    reset_emails = []
 
     def fake_send(recipient_email, verification_token):
         sent.append((recipient_email, verification_token))
 
+    def fake_send_reset(recipient_email, reset_token):
+        reset_emails.append((recipient_email, reset_token))
+
     monkeypatch.setattr(
         "server.auth.service.send_verification_email",
         fake_send,
+    )
+    monkeypatch.setattr(
+        "server.auth.service.send_password_reset_email",
+        fake_send_reset,
     )
 
     def override_get_db():
@@ -65,6 +74,7 @@ def client(db_session, monkeypatch):
 
     test_client = TestClient(app)
     test_client.sent_emails = sent
+    test_client.reset_emails = reset_emails
 
     try:
         yield test_client
@@ -277,3 +287,194 @@ def test_me_requires_a_valid_token(client):
         ).status_code
         == 401
     )
+
+
+# -------------------------------------------------------- password reset
+
+
+def verified_user(client, db_session, password="secret123"):
+    """Register and verify a user, returning their email."""
+    email = unique_email()
+    register(client, email=email, password=password)
+
+    user = db_session.query(User).filter(User.email == email).first()
+    client.get(f"/auth/verify-email?token={user.verification_token}")
+
+    return email
+
+
+def test_forgot_password_emails_a_token_and_stores_only_its_hash(
+    client, db_session
+):
+    email = verified_user(client, db_session)
+
+    response = client.post("/auth/forgot-password", json={"email": email})
+
+    assert response.status_code == 200
+
+    assert len(client.reset_emails) == 1
+    recipient, token = client.reset_emails[0]
+    assert recipient == email
+
+    user = db_session.query(User).filter(User.email == email).first()
+
+    # The raw token must never be at rest in the database.
+    assert user.reset_token is not None
+    assert user.reset_token != token
+    assert user.reset_token == hash_reset_token(token)
+    assert user.reset_token_expires > datetime.utcnow()
+
+
+def test_forgot_password_looks_identical_for_an_unknown_address(client):
+    known = client.post(
+        "/auth/forgot-password", json={"email": unique_email()}
+    )
+
+    assert known.status_code == 200
+    # No email is sent, and the response must not reveal that.
+    assert client.reset_emails == []
+    assert "if that email" in known.json()["message"].lower()
+
+
+def test_reset_password_sets_the_new_password(client, db_session):
+    email = verified_user(client, db_session)
+
+    client.post("/auth/forgot-password", json={"email": email})
+    _, token = client.reset_emails[0]
+
+    response = client.post(
+        "/auth/reset-password",
+        json={"token": token, "new_password": "a-brand-new-password"},
+    )
+
+    assert response.status_code == 200
+
+    # The old password no longer works.
+    assert (
+        client.post(
+            "/auth/login",
+            data={"username": email, "password": "secret123"},
+        ).status_code
+        == 401
+    )
+
+    # The new one does.
+    assert (
+        client.post(
+            "/auth/login",
+            data={"username": email, "password": "a-brand-new-password"},
+        ).status_code
+        == 200
+    )
+
+
+def test_a_reset_token_cannot_be_reused(client, db_session):
+    email = verified_user(client, db_session)
+
+    client.post("/auth/forgot-password", json={"email": email})
+    _, token = client.reset_emails[0]
+
+    first = client.post(
+        "/auth/reset-password",
+        json={"token": token, "new_password": "first-new-password"},
+    )
+    assert first.status_code == 200
+
+    second = client.post(
+        "/auth/reset-password",
+        json={"token": token, "new_password": "second-new-password"},
+    )
+
+    assert second.status_code == 400
+
+    # The first reset stands.
+    assert (
+        client.post(
+            "/auth/login",
+            data={"username": email, "password": "first-new-password"},
+        ).status_code
+        == 200
+    )
+
+
+def test_reset_password_rejects_an_expired_token(client, db_session):
+    email = verified_user(client, db_session)
+
+    client.post("/auth/forgot-password", json={"email": email})
+    _, token = client.reset_emails[0]
+
+    user = db_session.query(User).filter(User.email == email).first()
+    user.reset_token_expires = datetime.utcnow() - timedelta(minutes=1)
+    db_session.commit()
+
+    response = client.post(
+        "/auth/reset-password",
+        json={"token": token, "new_password": "a-brand-new-password"},
+    )
+
+    assert response.status_code == 400
+    assert "invalid or has expired" in response.json()["detail"]
+
+
+def test_reset_password_rejects_an_unknown_token(client):
+    response = client.post(
+        "/auth/reset-password",
+        json={"token": "not-a-real-token", "new_password": "long-enough-1"},
+    )
+
+    assert response.status_code == 400
+
+
+def test_reset_password_enforces_a_minimum_length(client, db_session):
+    email = verified_user(client, db_session)
+
+    client.post("/auth/forgot-password", json={"email": email})
+    _, token = client.reset_emails[0]
+
+    response = client.post(
+        "/auth/reset-password",
+        json={"token": token, "new_password": "short"},
+    )
+
+    # Rejected by the schema before any password is written.
+    assert response.status_code == 422
+
+    assert (
+        client.post(
+            "/auth/login",
+            data={"username": email, "password": "secret123"},
+        ).status_code
+        == 200
+    )
+
+
+# ------------------------------------------------------------ rate limits
+
+
+def test_login_is_rate_limited(client):
+    email = unique_email()
+
+    statuses = [
+        client.post(
+            "/auth/login",
+            data={"username": email, "password": "whatever"},
+        ).status_code
+        for _ in range(12)
+    ]
+
+    # Unlimited password guessing was possible before this limit existed.
+    assert 429 in statuses
+    assert statuses.index(429) == 10
+
+
+def test_forgot_password_is_rate_limited(client):
+    statuses = [
+        client.post(
+            "/auth/forgot-password", json={"email": unique_email()}
+        ).status_code
+        for _ in range(7)
+    ]
+
+    # Stops the endpoint being used to send bulk mail.
+    assert 429 in statuses
+    assert statuses.index(429) == 5

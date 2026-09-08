@@ -135,7 +135,7 @@ function Login() {
                   <button
                     type="button"
                     className="forgot-button"
-                    onClick={() => console.log("Forgot password")}
+                    onClick={() => navigate("/forgot-password")}
                   >
                     Forgot password?
                   </button>
@@ -186,19 +186,6 @@ function Login() {
                 </span>
               </button>
             </form>
-
-            <div className="auth-divider">
-              <span>OR</span>
-            </div>
-
-            <button
-              type="button"
-              className="demo-button"
-              onClick={() => console.log("Demo mode")}
-            >
-              <span>Explore demo workspace</span>
-              <span>↗</span>
-            </button>
 
             <p className="auth-footer">
               Don't have an account?

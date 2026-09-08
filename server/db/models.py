@@ -59,6 +59,20 @@ class User(Base):
         nullable=True,
     )
 
+    # Password reset. Unlike verification_token, this stores a SHA-256 hash
+    # of the token rather than the token itself: a reset token grants account
+    # takeover, so a database read alone must not be enough to use one.
+    reset_token = Column(
+        String,
+        nullable=True,
+        index=True,
+    )
+
+    reset_token_expires = Column(
+        DateTime,
+        nullable=True,
+    )
+
     documents = relationship(
         "Document",
         back_populates="owner",
