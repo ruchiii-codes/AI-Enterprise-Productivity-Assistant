@@ -1,0 +1,26 @@
+# Normalise text files to LF in the repository.
+* text=auto eol=lf
+
+# These MUST stay LF in the working tree, not just in the index. They are
+# copied into a Linux container, and CRLF line endings make the shebang fail
+# with "bad interpreter: /bin/sh^M".
+*.sh            text eol=lf
+Dockerfile      text eol=lf
+docker-entrypoint.sh text eol=lf
+alembic.ini     text eol=lf
+
+# Windows-only helpers keep CRLF.
+*.bat           text eol=crlf
+*.cmd           text eol=crlf
+
+# Binary assets: never touch.
+*.png           binary
+*.jpg           binary
+*.jpeg          binary
+*.gif           binary
+*.ico           binary
+*.pdf           binary
+*.db            binary
+*.zip           binary
+*.woff          binary
+*.woff2         binary
