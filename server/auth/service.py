@@ -3,12 +3,12 @@ from datetime import datetime, timedelta
 
 from sqlalchemy.orm import Session
 
-from server.auth.models import User
-from server.auth.schemas import UserRegister
 from server.auth.security import (
     hash_password,
     verify_password,
 )
+from server.db.models import User
+from server.schemas.auth import UserRegister
 from server.services.email_service import send_verification_email
 
 

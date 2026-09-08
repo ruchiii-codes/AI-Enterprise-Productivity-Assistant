@@ -8,9 +8,9 @@ from fastapi import (
 )
 from sqlalchemy.orm import Session
 
-from server.auth.database import get_db
 from server.auth.dependencies import get_current_user
-from server.auth.models import Conversation, Document, User
+from server.db.base import get_db
+from server.db.models import Conversation, Document, User
 from server.services.document_processor import process_document
 
 router = APIRouter(

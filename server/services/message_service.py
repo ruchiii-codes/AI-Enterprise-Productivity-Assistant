@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from server.auth.models import Message
+from server.db.models import Message
 
 
 def add_message(

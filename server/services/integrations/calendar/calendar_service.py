@@ -4,9 +4,9 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
-from server.auth.database import SessionLocal
-from server.auth.models import CalendarConnection
 from server.config import settings
+from server.db.base import SessionLocal
+from server.db.models import CalendarConnection
 
 
 def get_calendar_service(user_id):
@@ -96,23 +96,11 @@ def search_events(user_id, query, max_results=10):
     service = get_calendar_service(user_id)
 
     result = service.events().list(
-
-
         calendarId="primary",
-
-
         q=query,
-
-
         maxResults=max_results,
-
-
         singleEvents=True,
-
-
         orderBy="startTime",
-
-
     ).execute()
 
     return result.get("items", [])

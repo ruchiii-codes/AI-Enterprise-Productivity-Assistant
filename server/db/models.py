@@ -11,7 +11,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 
-from server.auth.database import Base
+from server.db.base import Base
 
 
 class User(Base):

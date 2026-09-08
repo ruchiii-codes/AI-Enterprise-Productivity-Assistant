@@ -1,7 +1,7 @@
 import requests
 
-from server.auth.database import SessionLocal
-from server.auth.models import GitHubConnection
+from server.db.base import SessionLocal
+from server.db.models import GitHubConnection
 
 BASE_URL = "https://api.github.com"
 

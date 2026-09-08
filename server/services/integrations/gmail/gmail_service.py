@@ -5,9 +5,9 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
-from server.auth.database import SessionLocal
-from server.auth.models import GmailConnection
 from server.config import settings
+from server.db.base import SessionLocal
+from server.db.models import GmailConnection
 
 GMAIL_SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",

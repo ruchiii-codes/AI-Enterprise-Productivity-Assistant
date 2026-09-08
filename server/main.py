@@ -1,5 +1,6 @@
 import logging
 import time
+from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,15 +26,15 @@ from server.api.message import (
     router as message_router,
 )
 from server.api.upload import router as upload_router
+from server.auth.dependencies import get_current_user
+from server.config import settings
 
 # Imported for its side effect: defining the ORM classes registers every table
-# on Base.metadata before create_all runs below. Do not remove.
-from server.auth import models  # noqa: F401
-from server.auth.database import Base, engine, get_db
-from server.auth.dependencies import get_current_user
-from server.auth.models import Document, User
-from server.config import settings
-from server.models.chat import ChatRequest
+# on Base.metadata. Alembic's autogenerate compares against it. Do not remove.
+from server.db import models  # noqa: F401
+from server.db.base import get_db
+from server.db.models import Document, User
+from server.schemas.chat import ChatRequest
 from server.services.conversation_service import (
     get_conversation,
     update_conversation_title,
@@ -60,11 +61,24 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application startup and shutdown.
+
+    Schema creation is handled by Alembic (`alembic upgrade head`), not by
+    create_all, so that schema changes are versioned and reviewable.
+    """
+    logger.info("Starting AI Enterprise Productivity Assistant")
+    yield
+    logger.info("Shutting down")
+
+
 # Create FastAPI application
 app = FastAPI(
     title="AI Enterprise Productivity Assistant",
     description="Backend API for the AI Enterprise Productivity Assistant",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan,
 )
 
 app.state.limiter = limiter
@@ -137,11 +151,6 @@ app.include_router(github_auth_router)
 app.include_router(gmail_auth_router)
 app.include_router(calendar_auth_router)
 
-
-@app.on_event("startup")
-def startup_event():
-
-    Base.metadata.create_all(bind=engine)
 
 # -----------------------------
 # Routes

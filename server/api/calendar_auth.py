@@ -6,10 +6,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
-from server.auth.database import get_db
 from server.auth.dependencies import get_current_user
-from server.auth.models import CalendarConnection, User
 from server.config import settings
+from server.db.base import get_db
+from server.db.models import CalendarConnection, User
 
 router = APIRouter(
     prefix="/auth/calendar",

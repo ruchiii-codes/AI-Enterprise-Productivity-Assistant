@@ -2,7 +2,7 @@ from datetime import datetime
 
 from sqlalchemy.orm import Session
 
-from server.auth.models import Conversation
+from server.db.models import Conversation
 
 
 def create_conversation(
