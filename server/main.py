@@ -1,5 +1,7 @@
 import logging
+import os
 import time
+
 from server.services.prompt_builder import build_messages
 
 from server.services.planner_service import (
@@ -122,8 +124,6 @@ async def request_monitoring(request: Request, call_next):
 # -----------------------------
 # CORS Configuration
 # -----------------------------
-import os
-
 origins = [
     "http://localhost:5173",
 ]

@@ -1,10 +1,12 @@
 from server.services.mcp.mcp_tool_service import execute_mcp_tool
 
 
-TOOL_MAPPING = {
-    "gmail_list_messages": "gmail_list_messages",
-    "calendar_get_upcoming_events": "calendar_get_upcoming_events",
-    "github_list_repositories": "github_list_repositories",
+# Tools exposed over MCP. The MCP tool name matches the local tool
+# function name, so this is an allowlist rather than a translation table.
+ALLOWED_MCP_TOOLS = {
+    "gmail_list_messages",
+    "calendar_get_upcoming_events",
+    "github_list_repositories",
 }
 
 
@@ -14,14 +16,14 @@ def execute_mcp_tools(tool_calls):
     for tool_call in tool_calls:
         tool_name = tool_call.tool.__name__
 
-        mcp_tool_name = TOOL_MAPPING.get(tool_name)
-
-        if not mcp_tool_name:
+        if tool_name not in ALLOWED_MCP_TOOLS:
             results.append({
                 "success": False,
                 "error": f"No MCP mapping found for {tool_name}",
             })
             continue
+
+        mcp_tool_name = tool_name
 
         try:
             result = execute_mcp_tool(mcp_tool_name)

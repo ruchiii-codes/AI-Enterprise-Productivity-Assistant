@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta, timezone
+
 from server.services.planner_service import Route
 from server.services.retriever_agent import retrieve
 from server.services.summarization_service import summarize
@@ -13,11 +15,6 @@ from server.services.integrations.github.github_tool import github_get_recent_ac
 from server.services.integrations.gmail.gmail_tool import (
     gmail_get_profile,
     gmail_send_email,
-)
-
-from datetime import datetime, timedelta, timezone
-
-from server.services.integrations.gmail.gmail_tool import (
     gmail_search_messages,
 )
 
@@ -25,7 +22,6 @@ from server.services.integrations.calendar.calendar_tool import (
     calendar_create_event,
 )
 
-from server.services.llm_service import generate_response
 
 def execute(
     plan: dict,

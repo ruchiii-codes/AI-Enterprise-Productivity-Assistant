@@ -37,3 +37,15 @@ credentials.json
 token.json
 credentials/
 calendar_token.json
+
+# Test / lint caches
+.pytest_cache/
+.ruff_cache/
+
+# Build artifacts
+dist/
+build/
+*.zip
+
+# Local database backups and archived artifacts
+backups/
