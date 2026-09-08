@@ -1,7 +1,6 @@
-from pathlib import Path
+from server.config import settings
 
-
-UPLOAD_FOLDER = Path("data/uploads")
+UPLOAD_FOLDER = settings.UPLOAD_DIR
 
 
 def count_uploaded_pdfs() -> int:

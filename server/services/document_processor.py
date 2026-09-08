@@ -1,19 +1,17 @@
 from fastapi import UploadFile
 from pypdf import PdfReader
 
-from server.services.bm25_service import create_bm25_index
 from server.services import bm25_store
-
-from server.services.upload_service import save_uploaded_file
+from server.services.bm25_service import create_bm25_index
+from server.services.chroma_service import (
+    get_collection_count,
+    store_embeddings,
+)
+from server.services.embedding_service import generate_embeddings
+from server.services.parent_child_service import create_parent_child_chunks
 from server.services.pdf_service import extract_text_from_pdf
 from server.services.text_cleaner import clean_text
-from server.services.chunk_service import split_text_into_chunks
-from server.services.embedding_service import generate_embeddings
-from server.services.chroma_service import (
-    store_embeddings,
-    get_collection_count,
-)
-from server.services.parent_child_service import create_parent_child_chunks
+from server.services.upload_service import save_uploaded_file
 
 
 def process_document(
@@ -55,7 +53,7 @@ def process_document(
     # Create BM25 index and store in bm25_store
     bm25_store.bm25_index = create_bm25_index(child_chunks)
     bm25_store.document_chunks = child_chunks
-    
+
     bm25_store.document_metadata = [
         {
             "user_id": user_id,
@@ -80,7 +78,7 @@ def process_document(
     # Print total stored chunks
     print(f"Total chunks stored: {get_collection_count()}")
 
-    return { 
+    return {
     "message": "File uploaded successfully.",
     "filename": file_path.name,
     "file_path": str(file_path),

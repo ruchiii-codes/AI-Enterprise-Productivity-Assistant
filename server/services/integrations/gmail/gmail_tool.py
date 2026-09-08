@@ -1,15 +1,16 @@
-from server.services.integrations.gmail.gmail_service import (
-    get_profile,
-    list_messages,
-    search_messages,
-    get_message,
-    send_email,
-)
 from server.services.integrations.gmail.gmail_formatter import (
     format_message,
     format_messages,
 )
+from server.services.integrations.gmail.gmail_service import (
+    get_message,
+    get_profile,
+    list_messages,
+    search_messages,
+    send_email,
+)
 from server.services.summarization_service import summarize_gmail_message
+
 
 def gmail_get_profile(user_id: int):
     return get_profile(user_id)
@@ -77,7 +78,7 @@ def gmail_search_and_summarize(
                 }
             )
 
-        except Exception as error:
+        except Exception:
             summaries.append(
                 {
                     "from": message.get("from"),

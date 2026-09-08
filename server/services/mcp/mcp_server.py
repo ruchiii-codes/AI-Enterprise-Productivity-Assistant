@@ -11,11 +11,8 @@ from mcp.server import MCPServer
 from server.services.integrations.calendar.calendar_service import (
     get_upcoming_events,
 )
-
-from server.services.integrations.gmail.gmail_service import list_messages
-
 from server.services.integrations.github.github_service import list_repositories
-
+from server.services.integrations.gmail.gmail_service import list_messages
 
 mcp = MCPServer("Enterprise Productivity Assistant")
 
@@ -93,4 +90,4 @@ def github_list_repositories() -> str:
     return "\n\n".join(results)
 
 if __name__ == "__main__":
-    mcp.run()    
+    mcp.run()

@@ -1,13 +1,7 @@
 import smtplib
 from email.message import EmailMessage
 
-from server.config import (
-    EMAIL_HOST,
-    EMAIL_PORT,
-    EMAIL_USERNAME,
-    EMAIL_PASSWORD,
-    FRONTEND_URL,
-)
+from server.config import settings
 
 
 def send_verification_email(
@@ -15,13 +9,13 @@ def send_verification_email(
     verification_token: str,
 ):
     verification_link = (
-        f"{FRONTEND_URL}/verify-email?token={verification_token}"
+        f"{settings.FRONTEND_URL}/verify-email?token={verification_token}"
     )
 
     message = EmailMessage()
 
     message["Subject"] = "Verify your WorkMind email"
-    message["From"] = EMAIL_USERNAME
+    message["From"] = settings.EMAIL_USERNAME
     message["To"] = recipient_email
 
     message.set_content(
@@ -43,7 +37,7 @@ WorkMind
 """
     )
 
-    with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT) as server:
+    with smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT) as server:
         server.starttls()
-        server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
+        server.login(settings.EMAIL_USERNAME, settings.EMAIL_PASSWORD)
         server.send_message(message)

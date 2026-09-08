@@ -2,22 +2,14 @@ import secrets
 from urllib.parse import urlencode
 
 import requests
-
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from server.auth.database import get_db
 from server.auth.dependencies import get_current_user
-from server.auth.models import User, GmailConnection
-
-from server.config import (
-    GOOGLE_CLIENT_ID,
-    GOOGLE_CLIENT_SECRET,
-    GOOGLE_REDIRECT_URI,
-    FRONTEND_URL,
-)
-
+from server.auth.models import GmailConnection, User
+from server.config import settings
 
 router = APIRouter(
     prefix="/auth/gmail",
@@ -102,8 +94,8 @@ def gmail_start(
     oauth_states[state] = current_user.id
 
     params = {
-        "client_id": GOOGLE_CLIENT_ID,
-        "redirect_uri": GOOGLE_REDIRECT_URI,
+        "client_id": settings.GOOGLE_CLIENT_ID,
+        "redirect_uri": settings.GOOGLE_REDIRECT_URI,
         "response_type": "code",
         "scope": " ".join(GMAIL_SCOPES),
         "access_type": "offline",
@@ -145,11 +137,11 @@ def gmail_callback(
     token_response = requests.post(
         GOOGLE_TOKEN_URL,
         data={
-            "client_id": GOOGLE_CLIENT_ID,
-            "client_secret": GOOGLE_CLIENT_SECRET,
+            "client_id": settings.GOOGLE_CLIENT_ID,
+            "client_secret": settings.GOOGLE_CLIENT_SECRET,
             "code": code,
             "grant_type": "authorization_code",
-            "redirect_uri": GOOGLE_REDIRECT_URI,
+            "redirect_uri": settings.GOOGLE_REDIRECT_URI,
         },
         timeout=15,
     )
@@ -231,5 +223,5 @@ def gmail_callback(
 
     # Return to frontend
     return RedirectResponse(
-        url=f"{FRONTEND_URL}/tools"
+        url=f"{settings.FRONTEND_URL}/tools"
     )

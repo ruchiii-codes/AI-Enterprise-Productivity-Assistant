@@ -8,13 +8,8 @@ from sqlalchemy.orm import Session
 
 from server.auth.database import get_db
 from server.auth.dependencies import get_current_user
-from server.auth.models import User, GitHubConnection
-from server.config import (
-    GITHUB_CLIENT_ID,
-    GITHUB_CLIENT_SECRET,
-    GITHUB_REDIRECT_URI,
-    FRONTEND_URL,
-)
+from server.auth.models import GitHubConnection, User
+from server.config import settings
 
 router = APIRouter(
     prefix="/auth/github",
@@ -86,8 +81,8 @@ def github_start(
     oauth_states[state] = current_user.id
 
     params = {
-        "client_id": GITHUB_CLIENT_ID,
-        "redirect_uri": GITHUB_REDIRECT_URI,
+        "client_id": settings.GITHUB_CLIENT_ID,
+        "redirect_uri": settings.GITHUB_REDIRECT_URI,
         "scope": "repo",
         "state": state,
     }
@@ -124,10 +119,10 @@ def github_callback(
     token_response = requests.post(
         "https://github.com/login/oauth/access_token",
         data={
-            "client_id": GITHUB_CLIENT_ID,
-            "client_secret": GITHUB_CLIENT_SECRET,
+            "client_id": settings.GITHUB_CLIENT_ID,
+            "client_secret": settings.GITHUB_CLIENT_SECRET,
             "code": code,
-            "redirect_uri": GITHUB_REDIRECT_URI,
+            "redirect_uri": settings.GITHUB_REDIRECT_URI,
         },
         headers={
             "Accept": "application/json",
@@ -189,5 +184,5 @@ def github_callback(
 
     # Return to frontend
     return RedirectResponse(
-        url=f"{FRONTEND_URL}/tools"
+        url=f"{settings.FRONTEND_URL}/tools"
     )

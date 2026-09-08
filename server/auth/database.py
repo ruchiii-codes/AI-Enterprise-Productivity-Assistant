@@ -1,13 +1,20 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
+from server.config import settings
 
-DATABASE_URL = "sqlite:///./assistant.db"
+DATABASE_URL = settings.DATABASE_URL
 
+# check_same_thread is a SQLite-only connect arg.
+connect_args = (
+    {"check_same_thread": False}
+    if DATABASE_URL.startswith("sqlite")
+    else {}
+)
 
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False},
+    connect_args=connect_args,
 )
 
 

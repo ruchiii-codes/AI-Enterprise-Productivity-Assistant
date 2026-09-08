@@ -1,8 +1,8 @@
 from unittest.mock import patch
 
+from server.services.integrations.github.github_tool import github_list_repositories
 from server.services.mcp.mcp_orchestrator import execute_mcp_tools
 from server.services.multi_tool.tool_call import ToolCall
-from server.services.integrations.github.github_tool import github_list_repositories
 
 
 def test_execute_mcp_tools():

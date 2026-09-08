@@ -6,10 +6,10 @@ from server.auth.dependencies import get_current_user
 from server.auth.models import User
 from server.services.conversation_service import (
     create_conversation,
-    get_user_conversations,
     delete_conversation,
-    toggle_pin_conversation,
+    get_user_conversations,
     search_user_conversations,
+    toggle_pin_conversation,
 )
 
 router = APIRouter(
@@ -74,7 +74,7 @@ def remove_conversation(
 
     return {
         "message": "Conversation deleted successfully."
-    }  
+    }
 
 @router.put("/{conversation_id}/pin")
 def pin_conversation(
@@ -97,4 +97,4 @@ def pin_conversation(
         "message": "Conversation pin status updated.",
         "is_pinned": conversation.is_pinned,
         "pinned_at": conversation.pinned_at,
-    }    
+    }

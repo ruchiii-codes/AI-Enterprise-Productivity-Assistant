@@ -1,6 +1,8 @@
-from sqlalchemy.orm import Session
 import secrets
 from datetime import datetime, timedelta
+
+from sqlalchemy.orm import Session
+
 from server.auth.models import User
 from server.auth.schemas import UserRegister
 from server.auth.security import (
@@ -8,6 +10,7 @@ from server.auth.security import (
     verify_password,
 )
 from server.services.email_service import send_verification_email
+
 
 def register_user(
     db: Session,
@@ -20,20 +23,20 @@ def register_user(
         .filter(User.email == user.email)
         .first()
     )
-    
+
     if existing_email:
         return "email_exists"
-    
+
     # Check if username already exists
     existing_username = (
         db.query(User)
         .filter(User.username == user.username)
         .first()
     )
-    
+
     if existing_username:
         return "username_exists"
-        
+
     verification_token = secrets.token_urlsafe(32)
     verification_token_expires = datetime.utcnow() + timedelta(hours=24)
 
@@ -49,12 +52,12 @@ def register_user(
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    
+
     send_verification_email(
         recipient_email=new_user.email,
         verification_token=verification_token,
     )
-    
+
     return new_user
 
 

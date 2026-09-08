@@ -1,8 +1,9 @@
-from pathlib import Path
 import shutil
 
+from server.config import settings
+
 # Upload folder
-UPLOAD_FOLDER = Path("data/uploads")
+UPLOAD_FOLDER = settings.UPLOAD_DIR
 
 
 def save_uploaded_file(file):

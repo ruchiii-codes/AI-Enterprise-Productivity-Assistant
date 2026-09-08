@@ -18,7 +18,7 @@ def extract_repository_name(query: str):
         r"pull requests in (.+)",
         r"pull requests of (.+)",
         r"repository (.+)",
-    
+
         r"create an issue in (.+?) titled",
         r"create issue in (.+?) titled",
         r"open an issue in (.+?) titled",

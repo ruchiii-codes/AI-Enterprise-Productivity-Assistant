@@ -1,0 +1,44 @@
+[project]
+name = "workmind"
+version = "1.0.0"
+description = "WorkMind - AI Enterprise Productivity Assistant"
+requires-python = ">=3.11"
+dynamic = ["dependencies"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["server"]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Make `server` importable regardless of the directory pytest is invoked from.
+pythonpath = ["."]
+filterwarnings = [
+    "ignore::DeprecationWarning:passlib.*",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = [".venv", "alembic/versions", "frontend", "backups"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = [
+    "E501",  # line length is handled by the formatter, not enforced here
+]
+
+[tool.ruff.lint.per-file-ignores]
+# mcp_server.py must extend sys.path before importing `server.*`, because it
+# runs as a standalone subprocess rather than inside the application.
+"server/services/mcp/mcp_server.py" = ["E402"]
+# These modules embed multi-line LLM prompts whose indentation is significant;
+# stripping "trailing whitespace" inside them would change the prompt text.
+"server/services/llm_service.py" = ["W293"]
+"server/services/query_rewrite_service.py" = ["W293"]

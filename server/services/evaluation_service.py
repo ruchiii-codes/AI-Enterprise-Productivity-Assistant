@@ -1,10 +1,13 @@
 import json
+
+from server.config import settings
 from server.services.search_service import search_documents
+
 
 def load_evaluation_questions():
 
     with open(
-        "data/evaluation_questions.json",
+        settings.DATA_DIR / "evaluation_questions.json",
         "r",
         encoding="utf-8"
     ) as file:

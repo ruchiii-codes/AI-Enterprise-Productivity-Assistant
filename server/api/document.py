@@ -5,7 +5,6 @@ from server.auth.database import get_db
 from server.auth.dependencies import get_current_user
 from server.auth.models import Document, User
 
-
 router = APIRouter(
     prefix="/documents",
     tags=["Documents"],

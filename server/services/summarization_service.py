@@ -1,12 +1,11 @@
 import os
 
-from server.services.pdf_service import extract_text_from_pdf
+from server.config import settings
 from server.services.llm_service import generate_response
-
+from server.services.pdf_service import extract_text_from_pdf
 from server.services.retriever_agent import retrieve
 
-
-UPLOAD_FOLDER = "data/uploads"
+UPLOAD_FOLDER = str(settings.UPLOAD_DIR)
 
 
 def summarize_latest_pdf():
@@ -107,7 +106,7 @@ Subject: {subject}
 {body}
 """
 
-    return generate_response(prompt)    
+    return generate_response(prompt)
 
 
 def summarize(question: str):
@@ -126,4 +125,4 @@ def summarize(question: str):
         return summarize_latest_pdf()
 
     # Topic summary
-    return summarize_topic(question)    
+    return summarize_topic(question)

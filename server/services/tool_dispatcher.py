@@ -1,32 +1,31 @@
-from server.services.integrations.github.github_tool import (
-    github_get_user,
-    github_list_repositories,
-    github_list_issues,
-    github_list_pull_requests,
-    github_repository_details,
-    github_create_issue,
-    github_get_recent_activity,
-)
-
-from server.services.integrations.gmail.gmail_tool import (
-    gmail_get_profile,
-    gmail_list_messages,
-    gmail_search_messages,
-    gmail_search_and_summarize,
-    gmail_get_message,
-    gmail_send_email,
-    gmail_summarize_message,
-    gmail_summarize_latest_email,
-    gmail_get_latest_message,
-)
-
 from server.services.integrations.calendar.calendar_tool import (
+    calendar_create_event,
+    calendar_create_from_query,
     calendar_get_tomorrow_events,
     calendar_get_upcoming_events,
     calendar_search_events,
-    calendar_create_event,
-    calendar_create_from_query,
 )
+from server.services.integrations.github.github_tool import (
+    github_create_issue,
+    github_get_recent_activity,
+    github_get_user,
+    github_list_issues,
+    github_list_pull_requests,
+    github_list_repositories,
+    github_repository_details,
+)
+from server.services.integrations.gmail.gmail_tool import (
+    gmail_get_latest_message,
+    gmail_get_message,
+    gmail_get_profile,
+    gmail_list_messages,
+    gmail_search_and_summarize,
+    gmail_search_messages,
+    gmail_send_email,
+    gmail_summarize_latest_email,
+    gmail_summarize_message,
+)
+
 
 def dispatch_tool(
     tool: str,
@@ -64,13 +63,13 @@ def dispatch_tool(
 
         if action == "list_issues":
             repo = params.get("repo")
-        
+
             if not repo:
                 raise ValueError("Repository name is required.")
-        
+
             github_user = github_get_user(user_id)
             owner = github_user["username"]
-        
+
             return github_list_issues(
                 user_id=user_id,
                 owner=owner,
@@ -79,55 +78,55 @@ def dispatch_tool(
 
         if action == "list_pull_requests":
             repo = params.get("repo")
-        
+
             if not repo:
                 raise ValueError("Repository name is required.")
-        
+
             github_user = github_get_user(user_id)
             owner = github_user["username"]
-        
+
             return github_list_pull_requests(
                 user_id=user_id,
                 owner=owner,
                 repo=repo,
-            )     
+            )
 
         if action == "repository_details":
             repo = params.get("repo")
-        
+
             if not repo:
                 raise ValueError("Repository name is required.")
-        
+
             github_user = github_get_user(user_id)
             owner = github_user["username"]
-        
+
             return github_repository_details(
                 user_id=user_id,
                 owner=owner,
                 repo=repo,
-            )   
+            )
 
         if action == "create_issue":
             repo = params.get("repo")
             title = params.get("title")
             body = params.get("body", "")
-        
+
             if not repo:
                 raise ValueError("Repository name is required.")
-        
+
             if not title:
                 raise ValueError("Issue title is required.")
-        
+
             github_user = github_get_user(user_id)
             owner = github_user["username"]
-        
+
             return github_create_issue(
                 user_id=user_id,
                 owner=owner,
                 repo=repo,
                 title=title,
                 body=body,
-            )   
+            )
 
     # -----------------------------
     # Gmail
@@ -184,13 +183,13 @@ def dispatch_tool(
             )
 
         if action == "send_email":
-            result = gmail_send_email(
+            gmail_send_email(
                 user_id=user_id,
                 to=params.get("to"),
                 subject=params.get("subject"),
                 body=params.get("body"),
             )
-        
+
             return {
                 "success": True,
                 "message": "Email sent successfully.",
@@ -224,14 +223,14 @@ def dispatch_tool(
                 user_id=user_id,
                 max_results=params.get("max_results", 10),
             )
-        
+
         if action == "search_events":
             return calendar_search_events(
                 user_id=user_id,
                 query=params.get("query", ""),
                 max_results=params.get("max_results", 10),
             )
-        
+
         if action == "create_event":
 
             # If the planner has already extracted structured
@@ -249,14 +248,14 @@ def dispatch_tool(
                     description=params.get("description"),
                     location=params.get("location"),
                 )
-        
+
             # Otherwise use the original natural-language parser.
             if question:
                 return calendar_create_from_query(
                     user_id=user_id,
                     query=question,
                 )
-        
+
             raise ValueError("Calendar event details are missing.")
 
     raise ValueError(

@@ -1,6 +1,5 @@
 from typing import List
 
-import numpy as np
 from rank_bm25 import BM25Okapi
 
 

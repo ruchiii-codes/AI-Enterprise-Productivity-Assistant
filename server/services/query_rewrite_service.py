@@ -1,7 +1,6 @@
 from server.services.llm_service import generate_response
 from server.utils.cache import TTLCache
 
-
 query_rewrite_cache = TTLCache(ttl_seconds=300)
 
 
@@ -19,13 +18,13 @@ def rewrite_query(question: str, history=None) -> str:
         return cached_result
 
     history_text = ""
-    
+
     if history:
         history_text = "\n".join(
             f"{message.role}: {message.content}"
             for message in history[-6:]
         )
-    
+
     prompt = f"""
     Rewrite the following user question into a concise, standalone search query
     for retrieving relevant information from a knowledge base.

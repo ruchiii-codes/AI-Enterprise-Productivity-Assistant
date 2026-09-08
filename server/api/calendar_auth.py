@@ -2,22 +2,14 @@ import secrets
 from urllib.parse import urlencode
 
 import requests
-
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from server.auth.database import get_db
 from server.auth.dependencies import get_current_user
-from server.auth.models import User, CalendarConnection
-
-from server.config import (
-    GOOGLE_CLIENT_ID,
-    GOOGLE_CLIENT_SECRET,
-    GOOGLE_CALENDAR_REDIRECT_URI,
-    FRONTEND_URL,
-)
-
+from server.auth.models import CalendarConnection, User
+from server.config import settings
 
 router = APIRouter(
     prefix="/auth/calendar",
@@ -99,8 +91,8 @@ def calendar_start(
     oauth_states[state] = current_user.id
 
     params = {
-        "client_id": GOOGLE_CLIENT_ID,
-        "redirect_uri": GOOGLE_CALENDAR_REDIRECT_URI,
+        "client_id": settings.GOOGLE_CLIENT_ID,
+        "redirect_uri": settings.GOOGLE_CALENDAR_REDIRECT_URI,
         "response_type": "code",
         "scope": " ".join(CALENDAR_SCOPES),
         "access_type": "offline",
@@ -136,11 +128,11 @@ def calendar_callback(
     token_response = requests.post(
         GOOGLE_TOKEN_URL,
         data={
-            "client_id": GOOGLE_CLIENT_ID,
-            "client_secret": GOOGLE_CLIENT_SECRET,
+            "client_id": settings.GOOGLE_CLIENT_ID,
+            "client_secret": settings.GOOGLE_CLIENT_SECRET,
             "code": code,
             "grant_type": "authorization_code",
-            "redirect_uri": GOOGLE_CALENDAR_REDIRECT_URI,
+            "redirect_uri": settings.GOOGLE_CALENDAR_REDIRECT_URI,
         },
         timeout=15,
     )
@@ -177,15 +169,15 @@ def calendar_callback(
         },
         timeout=15,
     )
-    
+
     if not profile_response.ok:
         raise HTTPException(
             status_code=400,
             detail="Unable to retrieve Google account profile.",
         )
-    
+
     profile = profile_response.json()
-    
+
     calendar_email = profile.get("email")
 
     if not calendar_email:
@@ -221,5 +213,5 @@ def calendar_callback(
     db.commit()
 
     return RedirectResponse(
-        url=f"{FRONTEND_URL}/tools"
+        url=f"{settings.FRONTEND_URL}/tools"
     )

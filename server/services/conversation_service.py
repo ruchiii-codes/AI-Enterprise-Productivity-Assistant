@@ -1,8 +1,9 @@
+from datetime import datetime
+
 from sqlalchemy.orm import Session
 
 from server.auth.models import Conversation
 
-from datetime import datetime
 
 def create_conversation(
     db: Session,
@@ -130,7 +131,7 @@ def delete_conversation(
     db.delete(conversation)
     db.commit()
 
-    return True    
+    return True
 
 def toggle_pin_conversation(
     db: Session,
@@ -159,11 +160,11 @@ def toggle_pin_conversation(
     else:
         conversation.is_pinned = True
         conversation.pinned_at = datetime.utcnow()
-    
+
     db.commit()
     db.refresh(conversation)
 
-    return conversation    
+    return conversation
 
 def search_user_conversations(
     db: Session,

@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
-from server.services.planner_service import Route
 from server.services.orchestrator_service import execute
+from server.services.planner_service import Route
 
 
 def test_orchestrator_uses_single_tool_flow():

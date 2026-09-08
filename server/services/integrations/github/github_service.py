@@ -3,7 +3,6 @@ import requests
 from server.auth.database import SessionLocal
 from server.auth.models import GitHubConnection
 
-
 BASE_URL = "https://api.github.com"
 
 

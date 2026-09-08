@@ -1,12 +1,13 @@
 import json
 
+from server.config import settings
 from server.services.planner_service import plan_route
 
 
 def evaluate_agents():
 
     with open(
-        "data/agent_evaluation_questions.json",
+        settings.DATA_DIR / "agent_evaluation_questions.json",
         "r",
         encoding="utf-8",
     ) as f:

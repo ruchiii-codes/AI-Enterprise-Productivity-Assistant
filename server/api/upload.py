@@ -10,9 +10,8 @@ from sqlalchemy.orm import Session
 
 from server.auth.database import get_db
 from server.auth.dependencies import get_current_user
-from server.auth.models import Document, User, Conversation
+from server.auth.models import Conversation, Document, User
 from server.services.document_processor import process_document
-
 
 router = APIRouter(
     prefix="/upload",
@@ -46,12 +45,12 @@ async def upload_pdf(
         )
         .first()
     )
-    
+
     if not conversation:
         raise HTTPException(
             status_code=404,
             detail="Conversation not found.",
-        )    
+        )
 
     # Process the document
     result = process_document(

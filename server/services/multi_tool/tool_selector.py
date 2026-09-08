@@ -1,19 +1,13 @@
-from server.services.multi_tool.tool_call import ToolCall
-
-from server.services.integrations.gmail.gmail_tool import (
-    gmail_list_messages,
-    gmail_search_messages,
-)
-
 from server.services.integrations.calendar.calendar_tool import (
     calendar_get_upcoming_events,
-    calendar_search_events,
 )
-
 from server.services.integrations.github.github_tool import (
     github_list_repositories,
-    github_list_pull_requests,
 )
+from server.services.integrations.gmail.gmail_tool import (
+    gmail_list_messages,
+)
+from server.services.multi_tool.tool_call import ToolCall
 
 
 def select_tools(question: str) -> list[ToolCall]:

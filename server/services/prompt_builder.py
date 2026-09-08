@@ -1,5 +1,3 @@
-from server.auth.models import Message
-
 
 SYSTEM_PROMPT = """
 You are WorkMind, an AI Enterprise Productivity Assistant.

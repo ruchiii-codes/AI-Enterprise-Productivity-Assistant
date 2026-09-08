@@ -1,26 +1,18 @@
 from datetime import datetime, timedelta, timezone
 
-from server.services.planner_service import Route
-from server.services.retriever_agent import retrieve
-from server.services.summarization_service import summarize
-from server.services.tool_service import count_uploaded_pdfs
-
-from server.services.multi_tool.tool_selector import select_tools
-from server.services.multi_tool.multi_tool_executor import execute_multiple_tools
-from server.services.multi_tool.result_formatter import format_multi_tool_results
-from server.services.mcp.mcp_orchestrator import execute_mcp_tools
-
-from server.services.llm_service import generate_response
-from server.services.integrations.github.github_tool import github_get_recent_activity
-from server.services.integrations.gmail.gmail_tool import (
-    gmail_get_profile,
-    gmail_send_email,
-    gmail_search_messages,
-)
-
 from server.services.integrations.calendar.calendar_tool import (
     calendar_create_event,
 )
+from server.services.integrations.github.github_tool import github_get_recent_activity
+from server.services.integrations.gmail.gmail_tool import (
+    gmail_get_profile,
+    gmail_search_messages,
+    gmail_send_email,
+)
+from server.services.llm_service import generate_response
+from server.services.planner_service import Route
+from server.services.retriever_agent import retrieve
+from server.services.summarization_service import summarize
 
 
 def execute(
@@ -144,7 +136,7 @@ GitHub activity:
                 )
 
             # Step 4: Send the email
-            send_result = gmail_send_email(
+            gmail_send_email(
                 user_id=user_id,
                 to=recipient,
                 subject="GitHub Activity Summary",

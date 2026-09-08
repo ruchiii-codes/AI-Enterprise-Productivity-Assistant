@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
 from datetime import datetime
-from sqlalchemy.orm import Session
+
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
 
 from server.auth.auth_service import (
     authenticate_user,
@@ -10,13 +11,11 @@ from server.auth.auth_service import (
 from server.auth.database import get_db
 from server.auth.dependencies import get_current_user
 from server.auth.models import User
-
 from server.auth.schemas import (
     UserRegister,
     UserResponse,
 )
 from server.auth.security import create_access_token
-
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -37,13 +36,13 @@ def register(
             status_code=400,
             detail="Email already registered.",
         )
-    
+
     if new_user == "username_exists":
         raise HTTPException(
             status_code=400,
             detail="Username already exists.",
         )
-    
+
     return new_user
 
 @router.get("/verify-email")

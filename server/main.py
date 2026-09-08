@@ -1,79 +1,63 @@
 import logging
-import os
 import time
 
-from server.services.prompt_builder import build_messages
-
-from server.services.planner_service import (
-    plan_route,
-    Route,
-)
-
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-
 from openai import (
     APIConnectionError,
-    APITimeoutError,
     APIError,
+    APITimeoutError,
 )
-
-from server.api.upload import router as upload_router
-from server.api.document import router as document_router
-from server.models.chat import ChatRequest
-from server.services.search_service import search_documents
-from server.services.llm_service import (
-    generate_response,
-    format_tool_response,
-)
-
-from server.services.orchestrator_service import execute
-
-from server.auth.database import Base, engine
-from server.auth import models
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from sqlalchemy.orm import Session
 
 from server.api.auth import router as auth_router
-
-from fastapi import Depends
-
-from server.auth.dependencies import get_current_user
-from server.auth.models import User, Document
-
+from server.api.calendar_auth import router as calendar_auth_router
 from server.api.conversation import (
     router as conversation_router,
 )
-
+from server.api.document import router as document_router
+from server.api.github_auth import router as github_auth_router
+from server.api.gmail_auth import router as gmail_auth_router
 from server.api.message import (
     router as message_router,
 )
+from server.api.upload import router as upload_router
 
-from sqlalchemy.orm import Session
-
-from server.auth.database import get_db
-
-from server.services.message_service import (
-    add_message,
-    get_recent_messages,
-)
-
+# Imported for its side effect: defining the ORM classes registers every table
+# on Base.metadata before create_all runs below. Do not remove.
+from server.auth import models  # noqa: F401
+from server.auth.database import Base, engine, get_db
+from server.auth.dependencies import get_current_user
+from server.auth.models import Document, User
+from server.config import settings
+from server.models.chat import ChatRequest
 from server.services.conversation_service import (
     get_conversation,
     update_conversation_title,
 )
-
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
-from slowapi.middleware import SlowAPIMiddleware
-
+from server.services.llm_service import (
+    format_tool_response,
+    generate_response,
+)
+from server.services.message_service import (
+    add_message,
+    get_recent_messages,
+)
+from server.services.orchestrator_service import execute
+from server.services.planner_service import (
+    Route,
+    plan_route,
+)
+from server.services.prompt_builder import build_messages
 from server.utils.rate_limiter import limiter
-from server.api.github_auth import router as github_auth_router
-from server.api.gmail_auth import router as gmail_auth_router
-from server.api.calendar_auth import router as calendar_auth_router
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
-)  
+)
 logger = logging.getLogger(__name__)
 
 # Create FastAPI application
@@ -124,18 +108,9 @@ async def request_monitoring(request: Request, call_next):
 # -----------------------------
 # CORS Configuration
 # -----------------------------
-origins = [
-    "http://localhost:5173",
-]
-
-frontend_url = os.getenv("FRONTEND_URL")
-
-if frontend_url:
-    origins.append(frontend_url)
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=[
         "GET",
@@ -206,7 +181,7 @@ def chat(
             status_code=404,
             detail="Conversation not found.",
         )
-    
+
     # Validate user input
     if not chat_request.question.strip():
         raise HTTPException(
@@ -218,7 +193,7 @@ def chat(
         db=db,
         conversation_id=chat_request.conversation_id,
     )
-    
+
     has_uploaded_documents = (
         db.query(Document)
         .filter(
@@ -234,7 +209,7 @@ def chat(
         chat_request.conversation_id,
         has_uploaded_documents,
     )
-    
+
     plan = plan_route(
         chat_request.question,
         history=history,
@@ -244,9 +219,9 @@ def chat(
     results = {
         "metadatas": []
     }
-        
+
     route = plan["route"]
-    
+
     logger.info(
         "Planner decision: route=%s tool=%s intent=%s parameters=%s",
         route.value,
@@ -254,12 +229,12 @@ def chat(
         plan.get("intent"),
         plan.get("parameters"),
     )
-    
+
     # -----------------------------
     # Orchestrator
     # -----------------------------
     if route != Route.DIRECT_LLM:
-    
+
         result = execute(
             plan=plan,
             question=chat_request.question,
@@ -297,9 +272,9 @@ def chat(
                 role="user",
                 content=chat_request.question,
             )
-        
+
             answer = result["answer"]
-        
+
             if route == Route.TOOL:
                 answer = format_tool_response(
                     tool=plan.get("tool"),
@@ -307,14 +282,14 @@ def chat(
                     result=answer,
                     question=chat_request.question,
                 )
-        
+
             add_message(
                 db=db,
                 conversation_id=chat_request.conversation_id,
                 role="assistant",
                 content=answer,
             )
-        
+
             if conversation.title == "New Conversation":
                 update_conversation_title(
                     db=db,
@@ -322,7 +297,7 @@ def chat(
                     user_id=current_user.id,
                     title=chat_request.question[:60],
                 )
-        
+
             return {
                 "answer": answer,
                 "sources": result.get("sources", []),
@@ -365,7 +340,7 @@ def chat(
             db=db,
             conversation_id=chat_request.conversation_id,
         )
-    
+
         messages = build_messages(
             history=history,
             current_prompt=prompt,

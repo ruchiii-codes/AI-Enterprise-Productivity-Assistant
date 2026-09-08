@@ -1,19 +1,13 @@
-import os
 from datetime import datetime, timedelta, timezone
 
-from dotenv import load_dotenv
 from jose import jwt
 from passlib.context import CryptContext
 
-load_dotenv()
+from server.config import settings
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY")
-
-if not SECRET_KEY:
-    raise RuntimeError("JWT_SECRET_KEY is not configured")
-
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+SECRET_KEY = settings.JWT_SECRET_KEY
+ALGORITHM = settings.JWT_ALGORITHM
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 
 pwd_context = CryptContext(
     schemes=["bcrypt"],

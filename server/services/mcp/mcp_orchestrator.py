@@ -1,6 +1,5 @@
 from server.services.mcp.mcp_tool_service import execute_mcp_tool
 
-
 # Tools exposed over MCP. The MCP tool name matches the local tool
 # function name, so this is an allowlist rather than a translation table.
 ALLOWED_MCP_TOOLS = {

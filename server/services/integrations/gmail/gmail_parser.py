@@ -50,32 +50,6 @@ def extract_gmail_search_query(query: str):
 
 
 def extract_message_id(query: str):
-    match = re.search(
-        r"message id[:\s]+([a-zA-Z0-9_-]+)",
-        query,
-        re.IGNORECASE,
-    )
-
-    if match:
-        return match.group(1)
-
-    return None
-
-
-def extract_email_recipient(query: str):
-    match = re.search(
-        r"(?:to|send to)\s+([^\s]+@[^\s]+)",
-        query,
-        re.IGNORECASE,
-    )
-
-    if match:
-        return match.group(1)
-
-    return None
-
-
-def extract_message_id(query: str):
     """
     Extracts a Gmail message ID when explicitly provided.
     """

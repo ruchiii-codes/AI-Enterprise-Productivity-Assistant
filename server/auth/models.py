@@ -1,19 +1,18 @@
+from datetime import datetime
+
 from sqlalchemy import (
+    JSON,
     Boolean,
     Column,
     DateTime,
     ForeignKey,
     Integer,
     String,
-    JSON,
 )
-
 from sqlalchemy.orm import relationship
 
 from server.auth.database import Base
 
-from sqlalchemy import DateTime
-from datetime import datetime
 
 class User(Base):
 
@@ -134,7 +133,7 @@ class GitHubConnection(Base):
     owner = relationship(
         "User",
         back_populates="github_connection",
-    )    
+    )
 
 class GmailConnection(Base):
 
@@ -182,7 +181,7 @@ class GmailConnection(Base):
     owner = relationship(
         "User",
         back_populates="gmail_connection",
-    )    
+    )
 
 class CalendarConnection(Base):
 
@@ -361,13 +360,13 @@ class Message(Base):
         String,
         nullable=False,
     )
-    
+
     sources = Column(
         JSON,
         nullable=False,
         default=list,
     )
-    
+
     created_at = Column(
         DateTime,
         default=datetime.utcnow,
@@ -377,4 +376,4 @@ class Message(Base):
     conversation = relationship(
         "Conversation",
         back_populates="messages",
-    )  
+    )

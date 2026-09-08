@@ -1,12 +1,14 @@
-from server.services.integrations.calendar.calendar_service import (
-    get_upcoming_events,
-    get_tomorrow_events,
-    search_events,
-    create_event,
-)
+from datetime import datetime
+
 from server.services.integrations.calendar.calendar_formatter import format_events
 from server.services.integrations.calendar.calendar_parser import parse_calendar_create_query
-from datetime import datetime
+from server.services.integrations.calendar.calendar_service import (
+    create_event,
+    get_tomorrow_events,
+    get_upcoming_events,
+    search_events,
+)
+
 
 def calendar_get_upcoming_events(user_id, max_results=10):
     events = get_upcoming_events(
@@ -24,7 +26,7 @@ def calendar_get_tomorrow_events(user_id, max_results=10):
         events,
         title="Tomorrow's Calendar Events",
     )
-    
+
 
 def calendar_search_events(user_id, query, max_results=10):
     events = search_events(

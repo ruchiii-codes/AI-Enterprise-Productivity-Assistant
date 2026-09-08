@@ -1,5 +1,6 @@
 import re
 
+
 def redact_sensitive_content(text):
     if not text:
         return text

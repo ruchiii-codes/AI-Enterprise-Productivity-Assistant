@@ -3,19 +3,19 @@ import logging
 from datetime import datetime, timedelta
 
 from openai import (
-    OpenAI,
     APIConnectionError,
-    APITimeoutError,
     APIError,
+    APITimeoutError,
+    OpenAI,
 )
 
-from server.config import OPENROUTER_API_KEY
+from server.config import settings
 
 logger = logging.getLogger(__name__)
 
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
-    api_key=OPENROUTER_API_KEY,
+    api_key=settings.OPENROUTER_API_KEY,
 )
 
 
@@ -716,15 +716,15 @@ Return:
   "parameters": {}
 }
 """
-    
+
     today = datetime.now().date()
     seven_days_ago = today - timedelta(days=7)
-    
+
     system_prompt = system_prompt.replace(
         "DOCUMENT_STATUS",
         str(has_uploaded_documents),
     )
-    
+
     system_prompt += f"""
     
     CURRENT DATE:
@@ -808,11 +808,11 @@ Return:
     if result.get("route") == "tool":
         if "intent" not in result:
             raise ValueError("Tool route requires an intent.")
-    
+
         if "parameters" not in result:
             result["parameters"] = {}
-    
-    else:
-        result.setdefault("parameters", {})    
 
-    return result    
+    else:
+        result.setdefault("parameters", {})
+
+    return result

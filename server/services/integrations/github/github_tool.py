@@ -1,18 +1,19 @@
-from server.services.integrations.github.github_service import (
-    get_authenticated_user,
-    list_repositories,
-    get_repository,
-    list_issues,
-    create_issue,
-    list_pull_requests,
-    get_recent_activity,
-)
 from server.services.integrations.github.github_formatter import (
-    format_repositories,
     format_issues,
     format_pull_requests,
+    format_repositories,
     format_repository_details,
 )
+from server.services.integrations.github.github_service import (
+    create_issue,
+    get_authenticated_user,
+    get_recent_activity,
+    get_repository,
+    list_issues,
+    list_pull_requests,
+    list_repositories,
+)
+
 
 def github_get_user(user_id: int):
     """

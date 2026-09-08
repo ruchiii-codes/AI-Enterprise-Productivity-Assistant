@@ -1,5 +1,5 @@
-from email.mime.text import MIMEText
 import base64
+from email.mime.text import MIMEText
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -7,11 +7,7 @@ from googleapiclient.discovery import build
 
 from server.auth.database import SessionLocal
 from server.auth.models import GmailConnection
-from server.config import (
-    GOOGLE_CLIENT_ID,
-    GOOGLE_CLIENT_SECRET,
-)
-
+from server.config import settings
 
 GMAIL_SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",
@@ -43,8 +39,8 @@ def get_gmail_service(user_id: int):
             token=connection.access_token,
             refresh_token=connection.refresh_token,
             token_uri=connection.token_uri,
-            client_id=GOOGLE_CLIENT_ID,
-            client_secret=GOOGLE_CLIENT_SECRET,
+            client_id=settings.GOOGLE_CLIENT_ID,
+            client_secret=settings.GOOGLE_CLIENT_SECRET,
             scopes=GMAIL_SCOPES,
         )
 

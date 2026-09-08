@@ -1,17 +1,16 @@
-from server.services.embedding_service import generate_query_embedding
-from server.services.chroma_service import (
-    search_embeddings,
-    get_parent_documents,
-)
-from server.services.prompt_service import build_prompt
-
-from server.services.bm25_service import bm25_search
 from server.services import bm25_store
-from server.services.reranker_service import rerank_documents
-from server.services.query_rewrite_service import rewrite_query
-from server.services.multi_query_service import generate_multi_queries
+from server.services.bm25_service import bm25_search
+from server.services.chroma_service import (
+    get_parent_documents,
+    search_embeddings,
+)
+from server.services.embedding_service import generate_query_embedding
 from server.services.hyde_service import generate_hypothetical_document
-from server.services.context_compression_service import compress_context
+from server.services.multi_query_service import generate_multi_queries
+from server.services.prompt_service import build_prompt
+from server.services.query_rewrite_service import rewrite_query
+from server.services.reranker_service import rerank_documents
+
 
 def search_documents(
     query: str,
@@ -27,10 +26,10 @@ def search_documents(
     rewritten_query = rewrite_query(
         query,
         history=history,
-    )    
+    )
     multi_queries = generate_multi_queries(rewritten_query)
     hypothetical_document = generate_hypothetical_document(rewritten_query)
-   
+
     # Generate embedding from rewritten query
     all_documents = []
     all_metadatas = []
@@ -51,7 +50,7 @@ def search_documents(
         all_metadatas.extend(results["metadatas"][0])
         all_distances.extend(results["distances"][0])
 
-        
+
     # HyDE retrieval
     hyde_embedding = generate_query_embedding(hypothetical_document)
 
@@ -85,7 +84,7 @@ def search_documents(
     print("\n" + "=" * 80)
     print("RETRIEVAL DISTANCES")
     print("=" * 80)
-    
+
     for document, metadata, distance in zip(
         documents,
         metadatas,
@@ -95,7 +94,7 @@ def search_documents(
         print("FILENAME:", metadata.get("filename"))
         print("DOCUMENT:", document[:200])
         print("-" * 80)
-    
+
     print("=" * 80 + "\n")
 
     filtered_documents = []
@@ -132,7 +131,7 @@ def search_documents(
 
     # Hybrid Search
     if bm25_store.bm25_index is not None:
-    
+
         bm25_results = bm25_search(
             query=rewritten_query,
             bm25=bm25_store.bm25_index,
@@ -142,18 +141,18 @@ def search_documents(
             user_id=user_id,
             conversation_id=conversation_id,
         )
-    
+
         hybrid_documents = list(
             dict.fromkeys(filtered_documents + bm25_results)
         )
-    
+
         final_documents = rerank_documents(
             query=rewritten_query,
             documents=hybrid_documents,
             top_k=3,
             min_score=0.1,
         )
-    
+
         # Keep metadata aligned with the final reranked documents
         metadata_by_document = {
             document: metadata
@@ -162,13 +161,13 @@ def search_documents(
                 filtered_metadatas,
             )
         }
-    
+
         final_metadatas = [
             metadata_by_document[document]
             for document in final_documents
             if document in metadata_by_document
         ]
-    
+
     else:
         final_metadatas = filtered_metadatas
 
@@ -183,9 +182,9 @@ def search_documents(
     # Do not rewrite/compress them with an LLM here,
     # because that can introduce information not present
     # in the uploaded documents.
-    
+
     retrieved_context = "\n\n---\n\n".join(final_documents)
-    
+
     if not retrieved_context.strip():
         return {
             "prompt": None,
@@ -193,13 +192,13 @@ def search_documents(
             "metadatas": [],
             "distances": [],
         }
-    
+
     print("\n" + "=" * 80)
     print("FINAL RETRIEVED CONTEXT")
     print("=" * 80)
     print(retrieved_context)
     print("=" * 80 + "\n")
-    
+
     prompt = build_prompt(
         query,
         [retrieved_context],

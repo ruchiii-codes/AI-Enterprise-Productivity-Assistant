@@ -1,11 +1,14 @@
-import chromadb
-from chromadb.config import Settings
 import uuid
+
+import chromadb
+from chromadb.config import Settings as ChromaSettings
+
+from server.config import settings
 
 # Create a persistent ChromaDB client
 chroma_client = chromadb.PersistentClient(
-    path="data/chroma_db",
-    settings=Settings(anonymized_telemetry=False)
+    path=str(settings.CHROMA_DIR),
+    settings=ChromaSettings(anonymized_telemetry=False)
 )
 
 # Create or get the collection
@@ -83,7 +86,7 @@ def search_embeddings(
         "query_embeddings": [query_embedding.tolist()],
         "n_results": top_k,
     }
-    
+
     if user_id is not None and conversation_id is not None:
         query_kwargs["where"] = {
             "$and": [
@@ -91,7 +94,7 @@ def search_embeddings(
                 {"conversation_id": conversation_id},
             ]
         }
-    
+
     results = collection.query(**query_kwargs)
 
     return results

@@ -1,12 +1,13 @@
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
 from server.auth.database import SessionLocal
 from server.auth.models import CalendarConnection
-from google.oauth2.credentials import Credentials
-from google.auth.transport.requests import Request
-from server.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+from server.config import settings
+
 
 def get_calendar_service(user_id):
     db = SessionLocal()
@@ -27,8 +28,8 @@ def get_calendar_service(user_id):
             token=connection.access_token,
             refresh_token=connection.refresh_token,
             token_uri=connection.token_uri,
-            client_id=GOOGLE_CLIENT_ID,
-            client_secret=GOOGLE_CLIENT_SECRET,
+            client_id=settings.GOOGLE_CLIENT_ID,
+            client_secret=settings.GOOGLE_CLIENT_SECRET,
             scopes=[
                 "https://www.googleapis.com/auth/calendar"
             ],
@@ -94,29 +95,27 @@ def get_tomorrow_events(user_id, max_results=10):
 def search_events(user_id, query, max_results=10):
     service = get_calendar_service(user_id)
 
-    now = datetime.now(timezone.utc).isoformat()
-
     result = service.events().list(
-    
-    
+
+
         calendarId="primary",
-    
-    
+
+
         q=query,
-    
-    
+
+
         maxResults=max_results,
-    
-    
+
+
         singleEvents=True,
-    
-    
+
+
         orderBy="startTime",
-    
-    
+
+
     ).execute()
 
-    return result.get("items", [])    
+    return result.get("items", [])
 
 
 def create_event(
