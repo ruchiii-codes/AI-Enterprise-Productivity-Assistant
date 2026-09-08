@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { getCurrentUser } from "../services/authService";
-import { getDocuments } from "../services/documentService";
+import { getCurrentUser } from "../api/auth";
+import { getDocuments } from "../api/documents";
 import Brand from "../components/Brand";
 import ProfileMenu from "../components/ProfileMenu";
 import "../styles/workspace.css";
@@ -12,24 +12,17 @@ function Workspace() {
   const [documents, setDocuments] = useState([]);
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
-
-    if (!token) {
-      return;
-    }
-
-    getCurrentUser(token)
+    getCurrentUser()
       .then(setUser)
       .catch(() => {
         setUser(null);
       });
 
-    getDocuments(token)
+    getDocuments()
       .then(setDocuments)
       .catch(() => {
         setDocuments([]);
-      });  
-
+      });
   }, []);
 
   return (

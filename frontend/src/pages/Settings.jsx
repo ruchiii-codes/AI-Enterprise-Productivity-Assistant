@@ -1,27 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Brand from "../components/Brand";
-import { getCurrentUser } from "../services/authService";
+import { getCurrentUser } from "../api/auth";
 import "../styles/workspace.css";
 
 function Settings() {
-  function Settings() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const loadUser = async () => {
-      const token = localStorage.getItem("access_token");
-
-      if (!token) {
-        setError("Authentication token not found.");
-        setLoading(false);
-        return;
-      }
-
       try {
-        const currentUser = await getCurrentUser(token);
+        const currentUser = await getCurrentUser();
         setUser(currentUser);
       } catch (err) {
         setError(err.message || "Unable to load account information.");
@@ -89,7 +80,15 @@ function Settings() {
               <div className="activity-icon">◉</div>
               <div>
                 <strong>Account</strong>
-                <span>Profile and account preferences</span>
+                <span>
+                  {loading
+                    ? "Loading account..."
+                    : error
+                      ? error
+                      : user
+                        ? `${user.username} · ${user.email}`
+                        : "Profile and account preferences"}
+                </span>
               </div>
               <span>→</span>
             </div>
@@ -125,7 +124,6 @@ function Settings() {
       </section>
     </main>
   );
-}
 }
 
 export default Settings;

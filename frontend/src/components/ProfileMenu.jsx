@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { getCurrentUser } from "../services/authService";
+import { getCurrentUser } from "../api/auth";
 
 function ProfileMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,13 +11,7 @@ function ProfileMenu() {
   const menuRef = useRef(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
-
-    if (!token) {
-      return;
-    }
-
-    getCurrentUser(token)
+    getCurrentUser()
       .then(setUser)
       .catch(() => {
         setUser(null);

@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
-import { verifyEmail } from "../services/authService";
+import { verifyEmail } from "../api/auth";
 import Brand from "../components/Brand";
 import "../styles/auth.css";
 
@@ -17,18 +17,18 @@ function VerifyEmail() {
   
     verificationStarted.current = true;
   
-    const token = new URLSearchParams(location.search).get("token");
-  
-    if (!token) {
-      setStatus("error");
-      setMessage("Invalid verification link.");
-      return;
-    }
-  
     const verify = async () => {
+      const token = new URLSearchParams(location.search).get("token");
+
+      if (!token) {
+        setStatus("error");
+        setMessage("Invalid verification link.");
+        return;
+      }
+
       try {
         const result = await verifyEmail(token);
-  
+
         setStatus("success");
         setMessage(
           result.message ||

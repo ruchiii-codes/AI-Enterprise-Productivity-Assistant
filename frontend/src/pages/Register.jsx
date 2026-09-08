@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import Brand from "../components/Brand";
-import { registerUser } from "../services/authService";
+import { registerUser } from "../api/auth";
 import "../styles/auth.css";
 
 function Register() {

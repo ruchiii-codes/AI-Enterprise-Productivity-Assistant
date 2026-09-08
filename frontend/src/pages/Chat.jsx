@@ -7,11 +7,11 @@ import {
   deleteConversation,
   togglePinConversation,
   searchConversations,  
-} from "../services/conversationService";
-import { getConversationMessages } from "../services/messageService";
-import { sendChatMessage } from "../services/chatService";
-import { uploadDocument } from "../services/uploadService";
-import { getConversationDocuments } from "../services/documentService";
+} from "../api/conversations";
+import { getConversationMessages } from "../api/messages";
+import { sendChatMessage } from "../api/chat";
+import { uploadDocument } from "../api/documents";
+import { getConversationDocuments } from "../api/documents";
 import "../styles/chat.css";
 import ReactMarkdown from "react-markdown";
 import ProfileMenu from "../components/ProfileMenu";
@@ -35,16 +35,9 @@ function Chat() {
 
   useEffect(() => {
     async function initializeChat() {
-      const token = localStorage.getItem("access_token");
-
-      if (!token) {
-        setError("You are not logged in.");
-        setLoadingConversation(false);
-        return;
-      }
 
       try {
-        const existingConversations = await getConversations(token);
+        const existingConversations = await getConversations();
 
         const conversationsWithMessages = existingConversations.filter(
           (conversation) => conversation.message_count > 0
@@ -80,8 +73,7 @@ function Chat() {
           );
 
           const previousMessages = await getConversationMessages(
-            selectedConversation.id,
-            token
+            selectedConversation.id
           );
 
           setMessages(previousMessages);
@@ -89,8 +81,7 @@ function Chat() {
 
 
           const documents = await getConversationDocuments(
-            selectedConversation.id,
-            token
+            selectedConversation.id
           );
 
           setDocuments(documents);
@@ -121,18 +112,12 @@ function Chat() {
       return;
     }
   
-    const token = localStorage.getItem("access_token");
-  
-    if (!token) {
-      setError("Your session has expired. Please sign in again.");
-      return;
-    }
   
     try {
       setSearching(true);
       setError("");
   
-      const results = await searchConversations(trimmedQuery, token);
+      const results = await searchConversations(trimmedQuery);
       setSearchResults(results);
     } catch (error) {
       setError(error.message || "Unable to search conversations.");
@@ -151,12 +136,6 @@ function Chat() {
   };
 
   const handleConversationSelect = async (conversation) => {
-    const token = localStorage.getItem("access_token");
-
-    if (!token) {
-      setError("Your session has expired. Please sign in again.");
-      return;
-    }
 
     try {
       setError("");
@@ -170,15 +149,13 @@ function Chat() {
       );
 
       const previousMessages = await getConversationMessages(
-        conversation.id,
-        token
+        conversation.id
       );
 
       setMessages(previousMessages);
 
       const conversationDocuments = await getConversationDocuments(
-        conversation.id,
-        token
+        conversation.id
       );
       
       setDocuments(conversationDocuments);
@@ -199,15 +176,9 @@ const handleDeleteConversation = async (conversation) => {
     return;
   }
 
-  const token = localStorage.getItem("access_token");
-
-  if (!token) {
-    setError("Authentication token not found.");
-    return;
-  }
 
   try {
-    await deleteConversation(conversation.id, token);
+    await deleteConversation(conversation.id);
 
     setConversations((prev) =>
       prev.filter((item) => item.id !== conversation.id)
@@ -225,20 +196,14 @@ const handleDeleteConversation = async (conversation) => {
 };
 
   const handleNewConversation = async () => {
-    const token = localStorage.getItem("access_token");
-
-    if (!token) {
-      setError("Your session has expired. Please sign in again.");
-      return;
-    }
 
     try {
       setError("");
       setLoadingConversation(true);
 
-      const conversation = await createConversation(token);
+      const conversation = await createConversation();
 
-      const updatedConversations = await getConversations(token);
+      const updatedConversations = await getConversations();
 
       const conversationsWithMessages = updatedConversations.filter(
         (conversation) => conversation.message_count > 0
@@ -282,12 +247,6 @@ const handleDeleteConversation = async (conversation) => {
       return;
     }
   
-    const token = localStorage.getItem("access_token");
-  
-    if (!token) {
-      setError("Your session has expired. Please sign in again.");
-      return;
-    }
   
     if (file.type !== "application/pdf") {
       setError("Please upload a PDF file.");
@@ -305,11 +264,10 @@ const handleDeleteConversation = async (conversation) => {
       setError("");
       setUploading(true);
   
-      const result = await uploadDocument(file, token, conversationId);
+      const result = await uploadDocument(file, conversationId);
 
       const updatedDocuments = await getConversationDocuments(
-        conversationId,
-        token
+        conversationId
       );
       
       setDocuments(updatedDocuments);
@@ -341,12 +299,6 @@ const handleDeleteConversation = async (conversation) => {
       return;
     }
 
-    const token = localStorage.getItem("access_token");
-
-    if (!token) {
-      setError("Your session has expired. Please sign in again.");
-      return;
-    }
 
     setError("");
     setSending(true);
@@ -355,7 +307,7 @@ const handleDeleteConversation = async (conversation) => {
 
     if (!currentConversationId) {
       try {
-        const newConversation = await createConversation(token);
+        const newConversation = await createConversation();
     
         currentConversationId = newConversation.id;
     
@@ -388,10 +340,9 @@ const handleDeleteConversation = async (conversation) => {
       const data = await sendChatMessage({
         question: trimmedMessage,
         conversationId: currentConversationId,
-        token,
       });
 
-      const updatedConversations = await getConversations(token);
+      const updatedConversations = await getConversations();
 
       const conversationsWithMessages = updatedConversations.filter(
         (conversation) => conversation.message_count > 0
@@ -532,17 +483,10 @@ const handleDeleteConversation = async (conversation) => {
                       <button
                         className="conversation-menu-item"
                         onClick={async () => {
-                          const token = localStorage.getItem("access_token");
-                      
-                          if (!token) {
-                            setError("Authentication token not found.");
-                            return;
-                          }
                       
                           try {
                             const result = await togglePinConversation(
-                              conversation.id,
-                              token
+                              conversation.id
                             );
                       
                             setConversations((prev) => {

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Brand from "../components/Brand";
-import { loginUser } from "../services/authService";
+import { loginUser } from "../api/auth";
 import "../styles/auth.css";
 
 function Login() {

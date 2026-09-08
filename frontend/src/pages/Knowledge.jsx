@@ -1,11 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Brand from "../components/Brand";
 import "../styles/workspace.css";
 import ProfileMenu from "../components/ProfileMenu";
-
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+import { getDocuments, uploadDocument } from "../api/documents";
 
 function Knowledge() {
   const fileInputRef = useRef(null);
@@ -20,33 +18,13 @@ function Knowledge() {
   // ---------------------------------------
   // Fetch user's documents
   // ---------------------------------------
-  const fetchDocuments = async () => {
-    const token = localStorage.getItem("access_token");
-
-    if (!token) {
-      setError("Please log in again.");
-      setLoadingDocuments(false);
-      return;
-    }
-
+  const fetchDocuments = useCallback(async () => {
     try {
+      const data = await getDocuments();
+
+      // Cleared after the request resolves so no state is set synchronously
+      // during the effect that calls this.
       setError("");
-
-      const response = await fetch(`${API_BASE_URL}/documents`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.detail || "Unable to load your documents."
-        );
-      }
-
       setDocuments(data);
     } catch (err) {
       setError(
@@ -55,12 +33,16 @@ function Knowledge() {
     } finally {
       setLoadingDocuments(false);
     }
-  };
+  }, []);
 
   // Load documents when page opens
   useEffect(() => {
+    // fetchDocuments sets state only after awaiting the request, so it cannot
+    // cause the cascading render this rule guards against. The rule flags any
+    // call to a function containing setState, which is a false positive here.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchDocuments();
-  }, []);
+  }, [fetchDocuments]);
 
   // ---------------------------------------
   // Upload
@@ -88,35 +70,10 @@ function Knowledge() {
     setUploading(true);
 
     try {
-      const token = localStorage.getItem("access_token");
-
-      if (!token) {
-        throw new Error(
-          "Please log in again before uploading a document."
-        );
-      }
-
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const response = await fetch(`${API_BASE_URL}/upload/`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.detail || "Unable to upload the document."
-        );
-      }
+      const data = await uploadDocument(file);
 
       setMessage(
-        data.message || "Document uploaded and indexed successfully."
+        data?.message || "Document uploaded and indexed successfully."
       );
 
       // Refresh document list after successful upload
@@ -240,6 +197,20 @@ function Knowledge() {
                 <span className="card-label">
                   YOUR KNOWLEDGE
                 </span>
+
+                {/* The hidden file input below had no visible trigger, so
+                    uploading from this page was unreachable. */}
+                <button
+                  type="button"
+                  className="new-chat-button"
+                  onClick={handleUploadClick}
+                  disabled={uploading}
+                >
+                  <span>＋</span>
+                  <span>
+                    {uploading ? "Uploading..." : "Upload PDF"}
+                  </span>
+                </button>
               </div>
 
               <div className="knowledge-list">

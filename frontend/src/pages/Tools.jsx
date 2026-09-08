@@ -1,334 +1,145 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Brand from "../components/Brand";
 import "../styles/workspace.css";
 import ProfileMenu from "../components/ProfileMenu";
+import {
+  PROVIDERS,
+  disconnectIntegration,
+  getIntegrationStatus,
+  startIntegrationConnect,
+} from "../api/integrations";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+const LABELS = {
+  github: "GitHub",
+  gmail: "Gmail",
+  calendar: "Calendar",
+};
+
+const INITIAL_STATE = {
+  github: { connected: false, account: null, loading: true },
+  gmail: { connected: false, account: null, loading: true },
+  calendar: { connected: false, account: null, loading: true },
+};
 
 function Tools() {
   const [error, setError] = useState("");
-  // GitHub state
-  const [githubConnected, setGithubConnected] = useState(false);
-  const [githubUsername, setGithubUsername] = useState(null);
-  const [githubLoading, setGithubLoading] = useState(true);
 
-  // Gmail state
-  const [gmailConnected, setGmailConnected] = useState(false);
-  const [gmailEmail, setGmailEmail] = useState(null);
-  const [gmailLoading, setGmailLoading] = useState(true);
+  // One entry per provider. The three providers previously had three
+  // near-identical copies of every piece of state and every handler.
+  const [integrations, setIntegrations] = useState(INITIAL_STATE);
 
-  // Calendar state
-  const [calendarConnected, setCalendarConnected] = useState(false);
-  const [calendarEmail, setCalendarEmail] = useState(null);
-  const [calendarLoading, setCalendarLoading] = useState(true);
+  const updateProvider = useCallback((provider, patch) => {
+    setIntegrations((current) => ({
+      ...current,
+      [provider]: { ...current[provider], ...patch },
+    }));
+  }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function checkConnections() {
-      const token = localStorage.getItem("access_token");
+      // Statuses are independent, so fetch them together rather than in
+      // sequence as before.
+      await Promise.all(
+        PROVIDERS.map(async (provider) => {
+          try {
+            const data = await getIntegrationStatus(provider);
 
-      if (!token) {
-        setGithubLoading(false);
-        setGmailLoading(false);
-        setCalendarLoading(false);
-        return;
-      }
+            if (cancelled) return;
 
-      // -------------------------
-      // GitHub status
-      // -------------------------
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}/auth/github/status`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            updateProvider(provider, {
+              connected: Boolean(data.connected),
+              // GitHub returns `username`; Gmail and Calendar return `email`.
+              account: data.username ?? data.email ?? null,
+              loading: false,
+            });
+          } catch (requestError) {
+            if (cancelled) return;
+
+            updateProvider(provider, {
+              connected: false,
+              account: null,
+              loading: false,
+            });
+
+            setError(
+              requestError.message ||
+                `Unable to check ${LABELS[provider]} connection.`
+            );
           }
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to check GitHub connection.");
-        }
-
-        const data = await response.json();
-
-        setGithubConnected(data.connected);
-        setGithubUsername(data.username);
-      } catch (error) {
-        console.error("GitHub status error:", error);
-        setError("Unable to check GitHub connection.");
-        setGithubConnected(false);
-        setGithubUsername(null);
-      } finally {
-        setGithubLoading(false);
-      }
-
-      // -------------------------
-      // Gmail status
-      // -------------------------
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}/auth/gmail/status`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to check Gmail connection.");
-        }
-
-        const data = await response.json();
-
-        setGmailConnected(data.connected);
-        setGmailEmail(data.email);
-      } catch (error) {
-        console.error("Gmail status error:", error);
-        setError("Unable to check Gmail connection.");
-        setGmailConnected(false);
-        setGmailEmail(null);
-      } finally {
-        setGmailLoading(false);
-      }
-
-      // -------------------------
-      // Calendar status
-      // -------------------------
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}/auth/calendar/status`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to check Calendar connection.");
-        }
-
-        const data = await response.json();
-
-        setCalendarConnected(data.connected);
-        setCalendarEmail(data.email);
-      } catch (error) {
-        console.error("Calendar status error:", error);
-        setError("Unable to check Calendar connection.");
-        setCalendarConnected(false);
-        setCalendarEmail(null);
-      } finally {
-        setCalendarLoading(false);
-      }
+        })
+      );
     }
 
     checkConnections();
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [updateProvider]);
 
   // -------------------------
-  // GitHub connect
+  // Connect / disconnect
   // -------------------------
-  const connectGitHub = async () => {
-    const token = localStorage.getItem("access_token");
-
-    if (!token) {
-      setError("Please log in again.");
-      return;
-    }
+  const connect = async (provider) => {
+    setError("");
 
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/auth/github/start`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const data = await startIntegrationConnect(provider);
 
-      if (!response.ok) {
-        throw new Error("Failed to start GitHub connection.");
+      if (!data?.authorization_url) {
+        throw new Error(
+          `${LABELS[provider]} did not return an authorization URL.`
+        );
       }
-
-      const data = await response.json();
 
       window.location.href = data.authorization_url;
-    } catch (error) {
-      console.error("GitHub connection error:", error);
-      setError("Unable to connect GitHub. Please try again.");
+    } catch (requestError) {
+      // Previously Gmail and Calendar surfaced this through alert() while
+      // GitHub used the inline banner. All three now use the banner.
+      setError(
+        requestError.message ||
+          `Unable to connect ${LABELS[provider]}. Please try again.`
+      );
     }
   };
 
-  // -------------------------
-  // GitHub disconnect
-  // -------------------------
-  const disconnectGitHub = async () => {
-    const token = localStorage.getItem("access_token");
-
-    if (!token) {
-      return;
-    }
+  const disconnect = async (provider) => {
+    setError("");
 
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/auth/github/disconnect`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      await disconnectIntegration(provider);
+
+      updateProvider(provider, { connected: false, account: null });
+    } catch (requestError) {
+      setError(
+        requestError.message ||
+          `Unable to disconnect ${LABELS[provider]}. Please try again.`
       );
-
-      if (!response.ok) {
-        throw new Error("Failed to disconnect GitHub.");
-      }
-
-      setGithubConnected(false);
-      setGithubUsername(null);
-    } catch (error) {
-      console.error("GitHub disconnect error:", error);
-      setError("Unable to disconnect GitHub. Please try again.");
     }
   };
 
-  // -------------------------
-  // Gmail connect
-  // -------------------------
-  const connectGmail = async () => {
-    const token = localStorage.getItem("access_token");
+  const connectGitHub = () => connect("github");
+  const disconnectGitHub = () => disconnect("github");
+  const connectGmail = () => connect("gmail");
+  const disconnectGmail = () => disconnect("gmail");
+  const connectCalendar = () => connect("calendar");
+  const disconnectCalendar = () => disconnect("calendar");
 
-    if (!token) {
-      alert("Please log in again.");
-      return;
-    }
+  // Named bindings kept so the markup below reads unchanged.
+  const githubConnected = integrations.github.connected;
+  const githubUsername = integrations.github.account;
+  const githubLoading = integrations.github.loading;
 
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/auth/gmail/start`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+  const gmailConnected = integrations.gmail.connected;
+  const gmailEmail = integrations.gmail.account;
+  const gmailLoading = integrations.gmail.loading;
 
-      if (!response.ok) {
-        throw new Error("Failed to start Gmail connection.");
-      }
-
-      const data = await response.json();
-
-      window.location.href = data.authorization_url;
-    } catch (error) {
-      console.error("Gmail connection error:", error);
-      alert("Unable to connect Gmail. Please try again.");
-    }
-  };
-
-  // -------------------------
-  // Gmail disconnect
-  // -------------------------
-  const disconnectGmail = async () => {
-    const token = localStorage.getItem("access_token");
-
-    if (!token) {
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/auth/gmail/disconnect`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to disconnect Gmail.");
-      }
-
-      setGmailConnected(false);
-      setGmailEmail(null);
-    } catch (error) {
-      console.error("Gmail disconnect error:", error);
-      alert("Unable to disconnect Gmail. Please try again.");
-    }
-  };
-
-  // -------------------------
-  // Calendar connect
-  // -------------------------
-  const connectCalendar = async () => {
-    const token = localStorage.getItem("access_token");
-
-    if (!token) {
-      alert("Please log in again.");
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/auth/calendar/start`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to start Calendar connection.");
-      }
-
-      const data = await response.json();
-
-      window.location.href = data.authorization_url;
-    } catch (error) {
-      console.error("Calendar connection error:", error);
-      alert("Unable to connect Calendar. Please try again.");
-    }
-  };
-
-  // -------------------------
-  // Calendar disconnect
-  // -------------------------
-  const disconnectCalendar = async () => {
-    const token = localStorage.getItem("access_token");
-
-    if (!token) {
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/auth/calendar/disconnect`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to disconnect Calendar.");
-      }
-
-      setCalendarConnected(false);
-      setCalendarEmail(null);
-    } catch (error) {
-      console.error("Calendar disconnect error:", error);
-      alert("Unable to disconnect Calendar. Please try again.");
-    }
-  };
+  const calendarConnected = integrations.calendar.connected;
+  const calendarEmail = integrations.calendar.account;
+  const calendarLoading = integrations.calendar.loading;
 
   return (
     <main className="workspace-page">
