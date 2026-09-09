@@ -216,11 +216,44 @@ WorkMind uses several layers of application security.
 | Authentication | JWT-based authentication |
 | Passwords | bcrypt hashing |
 | Email | Email verification |
+| Password Reset | Emailed single-use token, hashed at rest, 1-hour expiry |
 | APIs | Protected authenticated routes |
 | User Isolation | User-specific data and integrations |
-| Rate Limiting | Request rate control |
+| Rate Limiting | Per-endpoint request limits (slowapi) |
 | Secrets | Environment variables |
 
 OAuth is used for connected productivity services such as Gmail, Google Calendar, and GitHub.
+
+### Password Reset
+
+`POST /auth/forgot-password` issues a `secrets.token_urlsafe(32)` token,
+emails it as a `{FRONTEND_URL}/reset-password?token=...` link, and stores only
+its **SHA-256 hash** on the user row. Lookup hashes the presented token, so
+read access to the database alone cannot reset anyone's password — this is
+deliberately stricter than the verification token, which is stored in plaintext.
+
+The token expires after **one hour**, rather than the 24 hours allowed for
+email verification, because a reset token grants account takeover. It is
+cleared on use, so a link cannot be replayed.
+
+The endpoint returns the **same 200 response whether or not the address is
+registered**. Responding differently would turn it into an oracle for
+discovering which emails have accounts.
+
+`POST /auth/reset-password` validates the token and expiry, sets the new hash,
+clears the token, and marks the account verified — whoever followed the link
+has demonstrated control of the inbox.
+
+### Rate Limits
+
+Applied by slowapi, keyed on client address:
+
+| Endpoint | Limit |
+|---|---|
+| `POST /auth/login` | 10/minute |
+| `POST /auth/register` | 5/minute |
+| `POST /auth/forgot-password` | 5/minute |
+| `POST /auth/reset-password` | 5/minute |
+| `POST /chat` | 30/minute |
 
 Sensitive values such as API keys, OAuth secrets, email credentials, and JWT secrets should never be committed to the repository.

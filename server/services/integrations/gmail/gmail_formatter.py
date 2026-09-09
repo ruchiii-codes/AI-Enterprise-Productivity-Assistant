@@ -15,12 +15,6 @@ def redact_sensitive_content(text):
 
     return text
 
-def format_profile(profile):
-    return (
-        f"Gmail Account: {profile['email']}\n"
-        f"Total Messages: {profile['messages_total']}\n"
-        f"Total Threads: {profile['threads_total']}"
-    )
 
 
 def format_messages(messages):
@@ -50,9 +44,3 @@ def format_message(message):
     )
 
 
-def format_sent_email(result):
-    return (
-        "Email sent successfully!\n\n"
-        f"Message ID: {result['id']}\n"
-        f"Thread ID: {result.get('thread_id', 'Unknown')}"
-    )

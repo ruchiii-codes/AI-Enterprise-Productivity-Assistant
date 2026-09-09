@@ -1,26 +1,54 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./app/ProtectedRoute";
 
+// Login is the entry point for signed-out visitors, so it is bundled eagerly.
 import Login from "./pages/Login";
-import Register from "./pages/Register";
-import VerifyEmail from "./pages/VerifyEmail";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
-import Workspace from "./pages/Workspace";
-import Knowledge from "./pages/Knowledge";
-import Agents from "./pages/Agents";
-import Tools from "./pages/Tools";
-import Settings from "./pages/Settings";
-import Chat from "./pages/Chat";
+
+/**
+ * Every other page is split into its own chunk. Previously the whole
+ * application shipped in one bundle, so opening the login screen downloaded
+ * the chat page, the markdown renderer and all the rest of it.
+ */
+const Register = lazy(() => import("./pages/Register"));
+const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Workspace = lazy(() => import("./pages/Workspace"));
+const Knowledge = lazy(() => import("./pages/Knowledge"));
+const Agents = lazy(() => import("./pages/Agents"));
+const Tools = lazy(() => import("./pages/Tools"));
+const Settings = lazy(() => import("./pages/Settings"));
+const Chat = lazy(() => import("./pages/Chat"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 import "./App.css";
+
+/** Shown while a route chunk is being fetched. */
+function RouteFallback() {
+  return (
+    <main className="auth-page">
+      <section className="auth-shell">
+        <div className="auth-form-panel">
+          <div className="auth-form-container">
+            <div className="form-heading">
+              <span className="form-kicker">WORKMIND</span>
+              <h2>Loading...</h2>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
 
@@ -81,11 +109,9 @@ function App() {
             }
           />
 
-          <Route
-            path="*"
-            element={<Navigate to="/login" replace />}
-          />
+          <Route path="*" element={<NotFound />} />
         </Routes>
+        </Suspense>
       </AuthProvider>
     </BrowserRouter>
   );

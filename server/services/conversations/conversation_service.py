@@ -1,8 +1,7 @@
-from datetime import datetime
-
 from sqlalchemy.orm import Session
 
 from server.db.models import Conversation
+from server.utils.time_utils import utcnow
 
 
 def create_conversation(
@@ -159,7 +158,7 @@ def toggle_pin_conversation(
         conversation.pinned_at = None
     else:
         conversation.is_pinned = True
-        conversation.pinned_at = datetime.utcnow()
+        conversation.pinned_at = utcnow()
 
     db.commit()
     db.refresh(conversation)

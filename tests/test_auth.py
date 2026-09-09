@@ -5,7 +5,7 @@ assistant.db, and the verification email is stubbed so nothing reaches SMTP.
 """
 
 import uuid
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import pytest
 from fastapi.testclient import TestClient
@@ -17,6 +17,7 @@ from server.auth.service import hash_reset_token
 from server.db.base import Base, get_db
 from server.db.models import User
 from server.main import app
+from server.utils.time_utils import utcnow
 
 
 @pytest.fixture
@@ -227,7 +228,7 @@ def test_verify_email_rejects_an_expired_token(client, db_session):
     register(client, email=email)
 
     user = db_session.query(User).filter(User.email == email).first()
-    user.verification_token_expires = datetime.utcnow() - timedelta(hours=1)
+    user.verification_token_expires = utcnow() - timedelta(hours=1)
     db_session.commit()
 
     response = client.get(f"/auth/verify-email?token={user.verification_token}")
@@ -322,7 +323,7 @@ def test_forgot_password_emails_a_token_and_stores_only_its_hash(
     assert user.reset_token is not None
     assert user.reset_token != token
     assert user.reset_token == hash_reset_token(token)
-    assert user.reset_token_expires > datetime.utcnow()
+    assert user.reset_token_expires > utcnow()
 
 
 def test_forgot_password_looks_identical_for_an_unknown_address(client):
@@ -404,7 +405,7 @@ def test_reset_password_rejects_an_expired_token(client, db_session):
     _, token = client.reset_emails[0]
 
     user = db_session.query(User).filter(User.email == email).first()
-    user.reset_token_expires = datetime.utcnow() - timedelta(minutes=1)
+    user.reset_token_expires = utcnow() - timedelta(minutes=1)
     db_session.commit()
 
     response = client.post(

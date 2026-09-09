@@ -1,6 +1,6 @@
 import hashlib
 import secrets
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from sqlalchemy.orm import Session
 
@@ -14,6 +14,7 @@ from server.services.providers.email_service import (
     send_password_reset_email,
     send_verification_email,
 )
+from server.utils.time_utils import utcnow
 
 # A reset token grants account takeover, so it gets a short life -- unlike the
 # 24-hour verification token.
@@ -46,7 +47,7 @@ def register_user(
         return "username_exists"
 
     verification_token = secrets.token_urlsafe(32)
-    verification_token_expires = datetime.utcnow() + timedelta(hours=24)
+    verification_token_expires = utcnow() + timedelta(hours=24)
 
     new_user = User(
         username=user.username,
@@ -123,7 +124,7 @@ def request_password_reset(db: Session, email: str) -> None:
     token = secrets.token_urlsafe(32)
 
     user.reset_token = hash_reset_token(token)
-    user.reset_token_expires = datetime.utcnow() + RESET_TOKEN_TTL
+    user.reset_token_expires = utcnow() + RESET_TOKEN_TTL
 
     db.commit()
 
@@ -151,7 +152,7 @@ def reset_password(db: Session, token: str, new_password: str) -> bool:
     if user.reset_token_expires is None:
         return False
 
-    if datetime.utcnow() > user.reset_token_expires:
+    if utcnow() > user.reset_token_expires:
         return False
 
     user.hashed_password = hash_password(new_password)

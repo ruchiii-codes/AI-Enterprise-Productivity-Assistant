@@ -17,7 +17,7 @@ It combines RAG, agent-based routing, and integrations with Gmail, Google Calend
 | 📅 **Calendar** | View, search, create events, scheduling workflows |
 | 🐙 **GitHub** | Repositories, issues, pull requests, repository details, activity |
 | 🔌 **MCP** | MCP client/server and external tool integration |
-| 🔐 **Security** | JWT authentication, bcrypt, email verification, protected APIs |
+| 🔐 **Security** | JWT authentication, bcrypt, email verification, password reset, rate limiting, protected APIs |
 
 ---
 
@@ -152,10 +152,24 @@ startup with a clear message if either is missing.
 
 ### Tests
 
+Backend:
+
 ```bash
 pytest
 ruff check server tests
 ```
+
+Frontend:
+
+```bash
+cd frontend
+npm run test:run       # Vitest, once -- what CI runs
+npm run test:coverage  # with a coverage report
+npm run lint
+```
+
+CI runs all of these on every push and pull request; see
+[.github/workflows/ci.yml](.github/workflows/ci.yml).
 
 ### Database migrations
 

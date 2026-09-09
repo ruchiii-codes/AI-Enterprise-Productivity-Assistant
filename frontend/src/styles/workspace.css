@@ -65,7 +65,10 @@
   letter-spacing: 0.13em;
 }
 
-.conversation,
+/* `.conversation` used to be grouped into these selectors, but that class is
+   only ever rendered by the chat page, which styles it in chat.css. The two
+   definitions disagreed on height, font size and padding, and which one won
+   depended on stylesheet order. */
 .workspace-nav {
   display: flex;
   align-items: center;
@@ -83,21 +86,14 @@
   cursor: pointer;
 }
 
-.conversation:hover,
 .workspace-nav:hover,
-.conversation.active,
 .workspace-nav.active {
   background: rgba(255, 255, 255, 0.045);
   color: var(--wm-text);
 }
 
-.conversation.active,
 .workspace-nav.active {
   box-shadow: inset 2px 0 var(--wm-accent);
-}
-
-.conversation-icon {
-  color: var(--wm-text-muted);
 }
 
 .workspace-nav > span {
@@ -111,49 +107,16 @@
   gap: 14px;
 }
 
-.user-mini {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 11px 8px;
-  border-top: 1px solid var(--wm-border);
-}
-
-.user-avatar,
-.header-avatar {
+.user-avatar {
   display: grid;
   place-items: center;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: var(--wm-accent-soft);
   color: var(--wm-accent);
-  font-weight: 700;
-}
-
-.user-avatar {
-  width: 30px;
-  height: 30px;
   font-size: 10px;
-}
-
-.user-mini strong,
-.user-mini small {
-  display: block;
-}
-
-.user-mini strong {
-  font-size: 11px;
-}
-
-.user-mini small {
-  margin-top: 2px;
-  color: var(--wm-text-muted);
-  font-size: 9px;
-}
-
-.user-more {
-  margin-left: auto;
-  color: var(--wm-text-muted);
-  font-size: 9px;
+  font-weight: 700;
 }
 
 /* MAIN */
@@ -196,42 +159,6 @@
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.header-button,
-.icon-button {
-  height: 34px;
-  border: 1px solid var(--wm-border);
-  border-radius: 8px;
-  background: transparent;
-  color: var(--wm-text-secondary);
-  cursor: pointer;
-}
-
-.header-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 10px;
-  font: inherit;
-  font-size: 10px;
-}
-
-.header-button kbd {
-  margin-left: 10px;
-  color: var(--wm-text-muted);
-  font-size: 8px;
-}
-
-.icon-button {
-  width: 34px;
-}
-
-.header-avatar {
-  width: 32px;
-  height: 32px;
-  margin-left: 6px;
-  font-size: 10px;
 }
 
 /* CONTENT */
@@ -682,11 +609,6 @@
 
   .workspace-hero h1 {
     font-size: 36px;
-  }
-
-  .header-button span,
-  .header-button kbd {
-    display: none;
   }
 
   .activity-item time {

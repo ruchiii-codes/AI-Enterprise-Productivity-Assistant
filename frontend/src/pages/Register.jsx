@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import Brand from "../components/Brand";
+import Brand from "../components/ui/Brand";
+import Field from "../components/ui/Field";
+import PasswordField from "../components/ui/PasswordField";
 import { registerUser } from "../api/auth";
 import "../styles/auth.css";
 
@@ -176,103 +178,60 @@ function Register() {
             </div>
 
             <form onSubmit={handleSubmit} className="auth-form">
-              <div className="field">
-                <label htmlFor="name">Full name</label>
+              <Field
+                id="name"
+                label="Full name"
+                icon="✦"
+                name="name"
+                type="text"
+                placeholder="Your name"
+                value={form.name}
+                onChange={handleChange}
+                required
+              />
 
-                <div className="input-wrap">
-                  <span className="input-icon">✦</span>
+              <Field
+                id="register-email"
+                label="Email"
+                icon="@"
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                value={form.email}
+                onChange={handleChange}
+                required
+              />
 
-                  <input
-                    id="name"
-                    name="name"
-                    type="text"
-                    placeholder="Your name"
-                    value={form.name}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-              </div>
+              <PasswordField
+                id="register-password"
+                label="Password"
+                icon="●"
+                name="password"
+                placeholder="Create a password"
+                value={form.password}
+                onChange={handleChange}
+                minLength={8}
+                required
+                hint="Use at least 8 characters."
+                visible={showPassword}
+                onToggleVisibility={() => setShowPassword((value) => !value)}
+              />
 
-              <div className="field">
-                <label htmlFor="register-email">Email</label>
-
-                <div className="input-wrap">
-                  <span className="input-icon">@</span>
-
-                  <input
-                    id="register-email"
-                    name="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={form.email}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="field">
-                <label htmlFor="register-password">Password</label>
-
-                <div className="input-wrap">
-                  <span className="input-icon">●</span>
-
-                  <input
-                    id="register-password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Create a password"
-                    value={form.password}
-                    onChange={handleChange}
-                    minLength={8}
-                    required
-                  />
-
-                  <button
-                    type="button"
-                    className="password-toggle"
-                    onClick={() => setShowPassword((value) => !value)}
-                  >
-                    {showPassword ? "Hide" : "Show"}
-                  </button>
-                </div>
-
-                <small className="field-hint">
-                  Use at least 8 characters.
-                </small>
-              </div>
-
-              <div className="field">
-                <label htmlFor="confirm-password">
-                  Confirm password
-                </label>
-
-                <div className="input-wrap">
-                  <span className="input-icon">●</span>
-
-                  <input
-                    id="confirm-password"
-                    name="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Repeat your password"
-                    value={form.confirmPassword}
-                    onChange={handleChange}
-                    minLength={8}
-                    required
-                  />
-
-                  <button
-                    type="button"
-                    className="password-toggle"
-                    onClick={() =>
-                      setShowConfirmPassword((value) => !value)
-                    }
-                  >
-                    {showConfirmPassword ? "Hide" : "Show"}
-                  </button>
-                </div>
-              </div>
+              <PasswordField
+                id="confirm-password"
+                label="Confirm password"
+                icon="●"
+                name="confirmPassword"
+                placeholder="Repeat your password"
+                value={form.confirmPassword}
+                onChange={handleChange}
+                minLength={8}
+                required
+                visible={showConfirmPassword}
+                onToggleVisibility={() =>
+                  setShowConfirmPassword((value) => !value)
+                }
+              />
 
               <button type="submit" className="auth-submit">
                 <span>Create workspace</span>

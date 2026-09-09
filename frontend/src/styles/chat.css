@@ -135,7 +135,7 @@
 
 
 /* Individual conversation */
-.conversation {
+.chat-page .conversation {
   position: relative;
 
   width: 100%;
@@ -166,17 +166,17 @@
   box-sizing: border-box;
 }
 
-.conversation:hover {
+.chat-page .conversation:hover {
   background: var(--wm-accent-soft);
   color: var(--wm-text);
 }
 
-.conversation.active {
+.chat-page .conversation.active {
   background: var(--wm-accent-soft);
   color: var(--wm-text);
 }
 
-.conversation-icon {
+.chat-page .conversation-icon {
   width: 13px;
   flex: 0 0 13px;
 
@@ -187,7 +187,7 @@
   text-align: center;
 }
 
-.conversation.active .conversation-icon {
+.chat-page .conversation.active .conversation-icon {
   color: var(--wm-accent);
 }
 
@@ -298,8 +298,8 @@
   color: #f87171;
 }
 
-.conversation:hover .conversation-delete,
-.conversation.active .conversation-delete {
+.chat-page .conversation:hover .conversation-delete,
+.chat-page .conversation.active .conversation-delete {
   opacity: 1;
   visibility: visible;
 }
@@ -315,7 +315,7 @@
    SIDEBAR BOTTOM
    ========================================================= */
 
-.sidebar-bottom {
+.chat-page .sidebar-bottom {
   flex-shrink: 0;
 
   padding-top: 10px;
@@ -461,8 +461,7 @@
 }
 
 
-.header-search-button,
-.header-user-button {
+.header-search-button {
   width: 36px;
   height: 36px;
 
@@ -482,24 +481,9 @@
 }
 
 
-.header-search-button:hover,
-.header-user-button:hover {
+.header-search-button:hover {
   background: rgba(255, 255, 255, 0.05);
   color: #ffffff;
-}
-
-
-.header-user-button {
-  border-radius: 50%;
-
-  background: var(--wm-accent-soft);
-
-  border-color: var(--wm-border);
-
-  color: var(--wm-accent);
-
-  font-size: 11px;
-  font-weight: 600;
 }
 
 
@@ -1511,20 +1495,6 @@
   opacity: 0.6;
 }
 
-.conversation-search-footer {
-  padding: 10px 16px;
-  border-top: 1px solid var(--chat-border, #e5e7eb);
-  font-size: 12px;
-  opacity: 0.55;
-}
-
-.conversation-search-footer kbd {
-  padding: 2px 6px;
-  border-radius: 4px;
-  border: 1px solid var(--chat-border, #d1d5db);
-  font-size: 11px;
-}
-
 /* Mobile */
 @media (max-width: 640px) {
   .conversation-search-overlay {
@@ -1576,14 +1546,4 @@
 
 [data-theme="dark"] .conversation-search-result-snippet {
   color: #b5b5b5;
-}
-
-[data-theme="dark"] .conversation-search-footer {
-  border-color: #383838;
-  color: #a1a1a1;
-}
-
-[data-theme="dark"] .conversation-search-footer kbd {
-  border-color: #555;
-  color: #d4d4d4;
 }

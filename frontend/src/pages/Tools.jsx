@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import Brand from "../components/Brand";
+import AppLayout from "../components/layout/AppLayout";
 import "../styles/workspace.css";
-import ProfileMenu from "../components/ProfileMenu";
 import {
   PROVIDERS,
   disconnectIntegration,
@@ -141,70 +139,23 @@ function Tools() {
   const calendarEmail = integrations.calendar.account;
   const calendarLoading = integrations.calendar.loading;
 
+  const errorBanner = error ? (
+    <div className="tools-error">
+      <span>!</span>
+      <span>{error}</span>
+
+      <button
+        type="button"
+        onClick={() => setError("")}
+        aria-label="Dismiss error"
+      >
+        ×
+      </button>
+    </div>
+  ) : null;
+
   return (
-    <main className="workspace-page">
-      {error && (
-        <div className="tools-error">
-          <span>!</span>
-          <span>{error}</span>
-      
-          <button
-            type="button"
-            onClick={() => setError("")}
-            aria-label="Dismiss error"
-          >
-            ×
-          </button>
-        </div>
-      )}
-      <aside className="workspace-sidebar">
-        <div className="sidebar-top">
-          <Brand compact />
-
-          <Link to="/workspace" className="new-chat-button">
-            <span>←</span>
-            <span>Back to workspace</span>
-          </Link>
-
-          <div className="sidebar-section">
-            <div className="sidebar-label">WORKSPACE</div>
-
-            <Link to="/workspace" className="workspace-nav">
-              <span>⌂</span>
-              Overview
-            </Link>
-
-            <Link to="/knowledge" className="workspace-nav">
-              <span>✦</span>
-              Knowledge
-            </Link>
-
-            <Link to="/agents" className="workspace-nav">
-              <span>◇</span>
-              Agents
-            </Link>
-
-            <Link to="/tools" className="workspace-nav active">
-              <span>⌁</span>
-              Connected tools
-            </Link>
-          </div>
-        </div>
-      </aside>
-
-      <section className="workspace-main">
-        <header className="workspace-header">
-          <span className="header-status">
-            <span />
-            TOOL CONNECTIONS
-          </span>
-
-          <div className="header-actions">
-            <ProfileMenu />
-          </div>
-        </header>
-
-        <div className="workspace-content">
+    <AppLayout status="TOOL CONNECTIONS" banner={errorBanner}>
           <section className="workspace-hero">
             <div>
               <span className="hero-kicker">CONNECTED TOOLS</span>
@@ -472,9 +423,7 @@ function Tools() {
             </div>
 
           </section>
-        </div>
-      </section>
-    </main>
+    </AppLayout>
   );
 }
 

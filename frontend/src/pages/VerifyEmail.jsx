@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { verifyEmail } from "../api/auth";
-import Brand from "../components/Brand";
+import Brand from "../components/ui/Brand";
 import "../styles/auth.css";
 
 function VerifyEmail() {

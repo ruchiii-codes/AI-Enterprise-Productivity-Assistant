@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -21,6 +19,7 @@ from server.schemas.auth import (
     UserResponse,
 )
 from server.utils.rate_limiter import limiter
+from server.utils.time_utils import utcnow
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -84,7 +83,7 @@ def verify_email(
             detail="Verification token is invalid.",
         )
 
-    if datetime.utcnow() > user.verification_token_expires:
+    if utcnow() > user.verification_token_expires:
         raise HTTPException(
             status_code=400,
             detail="Verification token has expired.",

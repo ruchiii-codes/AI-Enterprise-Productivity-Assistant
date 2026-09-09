@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from sqlalchemy import (
     JSON,
     Boolean,
@@ -12,6 +10,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 
 from server.db.base import Base
+from server.utils.time_utils import utcnow
 
 
 class User(Base):
@@ -140,7 +139,7 @@ class GitHubConnection(Base):
 
     created_at = Column(
         DateTime,
-        default=datetime.utcnow,
+        default=utcnow,
         nullable=False,
     )
 
@@ -188,7 +187,7 @@ class GmailConnection(Base):
 
     created_at = Column(
         DateTime,
-        default=datetime.utcnow,
+        default=utcnow,
         nullable=False,
     )
 
@@ -236,7 +235,7 @@ class CalendarConnection(Base):
 
     created_at = Column(
         DateTime,
-        default=datetime.utcnow,
+        default=utcnow,
         nullable=False,
     )
 
@@ -273,7 +272,7 @@ class Document(Base):
 
     created_at = Column(
         DateTime,
-        default=datetime.utcnow,
+        default=utcnow,
         nullable=False,
     )
 
@@ -383,7 +382,7 @@ class Message(Base):
 
     created_at = Column(
         DateTime,
-        default=datetime.utcnow,
+        default=utcnow,
         nullable=False,
     )
 

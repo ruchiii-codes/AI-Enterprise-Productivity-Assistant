@@ -169,14 +169,6 @@ def github_list_pull_requests(
     return format_pull_requests(results)
 
 
-def github_get_owner(user_id: int):
-    """
-    Returns the authenticated GitHub username.
-    """
-
-    user = get_authenticated_user(user_id)
-
-    return user["login"]
 
 def github_get_recent_activity(
     user_id: int,

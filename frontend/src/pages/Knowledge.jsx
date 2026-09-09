@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
-import Brand from "../components/Brand";
+import AppLayout from "../components/layout/AppLayout";
 import "../styles/workspace.css";
-import ProfileMenu from "../components/ProfileMenu";
 import { getDocuments, uploadDocument } from "../api/documents";
 
 function Knowledge() {
@@ -110,61 +108,7 @@ function Knowledge() {
   };
 
   return (
-    <main className="workspace-page">
-      {/* Sidebar */}
-      <aside className="workspace-sidebar">
-        <div className="sidebar-top">
-          <Brand compact />
-
-          <Link to="/workspace" className="new-chat-button">
-            <span>←</span>
-            <span>Back to workspace</span>
-          </Link>
-
-          <div className="sidebar-section">
-            <div className="sidebar-label">WORKSPACE</div>
-
-            <Link to="/workspace" className="workspace-nav">
-              <span>⌂</span>
-              Overview
-            </Link>
-
-            <Link
-              to="/knowledge"
-              className="workspace-nav active"
-            >
-              <span>✦</span>
-              Knowledge
-            </Link>
-
-            <Link to="/agents" className="workspace-nav">
-              <span>◇</span>
-              Agents
-            </Link>
-
-            <Link to="/tools" className="workspace-nav">
-              <span>⌁</span>
-              Connected tools
-            </Link>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main content */}
-      <section className="workspace-main">
-        {/* Header */}
-        <header className="workspace-header">
-          <span className="header-status">
-            <span />
-            KNOWLEDGE BASE
-          </span>
-
-          <div className="header-actions">
-            <ProfileMenu />
-          </div>
-        </header>
-
-        <div className="workspace-content">
+    <AppLayout status="KNOWLEDGE BASE">
           {/* Hero */}
           <section className="workspace-hero">
             <div>
@@ -285,9 +229,7 @@ function Knowledge() {
               {error}
             </p>
           )}
-        </div>
-      </section>
-    </main>
+    </AppLayout>
   );
 }
 

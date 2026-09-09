@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
+import ConversationSearch from "../components/chat/ConversationSearch";
+import MessageList from "../components/chat/MessageList";
+import Composer from "../components/chat/Composer";
+import ConversationList from "../components/chat/ConversationList";
 import { Link } from "react-router-dom";
-import Brand from "../components/Brand";
+import Brand from "../components/ui/Brand";
 import {
   createConversation,
   getConversations,
@@ -8,13 +12,29 @@ import {
   togglePinConversation,
   searchConversations,  
 } from "../api/conversations";
+import { CONVERSATION_STORAGE_KEY } from "../config/env";
 import { getConversationMessages } from "../api/messages";
 import { sendChatMessage } from "../api/chat";
 import { uploadDocument } from "../api/documents";
 import { getConversationDocuments } from "../api/documents";
 import "../styles/chat.css";
-import ReactMarkdown from "react-markdown";
-import ProfileMenu from "../components/ProfileMenu";
+import ProfileMenu from "../components/layout/ProfileMenu";
+
+/**
+ * Pinned conversations first, oldest pin first within them, then by id.
+ * This comparator was previously duplicated in two handlers.
+ */
+function sortConversations(a, b) {
+  if (a.is_pinned !== b.is_pinned) {
+    return a.is_pinned ? -1 : 1;
+  }
+
+  if (a.is_pinned && b.is_pinned) {
+    return new Date(a.pinned_at) - new Date(b.pinned_at);
+  }
+
+  return a.id - b.id;
+}
 
 function Chat() {
   const [message, setMessage] = useState("");
@@ -46,7 +66,7 @@ function Chat() {
         setConversations(conversationsWithMessages);
 
         const savedConversationId = localStorage.getItem(
-          "workmind_conversation_id"
+          CONVERSATION_STORAGE_KEY
         );
 
         let selectedConversation = null;
@@ -68,7 +88,7 @@ function Chat() {
           setConversationId(selectedConversation.id);
 
           localStorage.setItem(
-            "workmind_conversation_id",
+            CONVERSATION_STORAGE_KEY,
             String(selectedConversation.id)
           );
 
@@ -87,7 +107,7 @@ function Chat() {
           setDocuments(documents);
         } else {
           setConversationId(null);
-          localStorage.removeItem("workmind_conversation_id");
+          localStorage.removeItem(CONVERSATION_STORAGE_KEY);
           setMessages([]);
           setDocuments([]);
         }
@@ -144,7 +164,7 @@ function Chat() {
       setConversationId(conversation.id);
 
       localStorage.setItem(
-        "workmind_conversation_id",
+        CONVERSATION_STORAGE_KEY,
         String(conversation.id)
       );
 
@@ -188,12 +208,36 @@ const handleDeleteConversation = async (conversation) => {
       setConversationId(null);
       setMessages([]);
       setDocuments([]);
-      localStorage.removeItem("workmind_conversation_id");
+      localStorage.removeItem(CONVERSATION_STORAGE_KEY);
     }
   } catch (error) {
     setError(error.message || "Unable to delete conversation.");
   }
 };
+
+  const handleTogglePin = async (conversation) => {
+    try {
+      const result = await togglePinConversation(conversation.id);
+
+      setConversations((prev) => {
+        const updated = prev.map((item) =>
+          item.id === conversation.id
+            ? {
+                ...item,
+                is_pinned: result.is_pinned,
+                pinned_at: result.pinned_at,
+              }
+            : item
+        );
+
+        return updated.sort(sortConversations);
+      });
+
+      setOpenConversationMenu(null);
+    } catch (error) {
+      setError(error.message || "Unable to update pin status.");
+    }
+  };
 
   const handleNewConversation = async () => {
 
@@ -209,24 +253,16 @@ const handleDeleteConversation = async (conversation) => {
         (conversation) => conversation.message_count > 0
       );
 
-      const sortedConversations = [...conversationsWithMessages].sort((a, b) => {
-        if (a.is_pinned !== b.is_pinned) {
-          return a.is_pinned ? -1 : 1;
-        }
-      
-        if (a.is_pinned && b.is_pinned) {
-          return new Date(a.pinned_at) - new Date(b.pinned_at);
-        }
-      
-        return a.id - b.id;
-      });
+      const sortedConversations = [...conversationsWithMessages].sort(
+        sortConversations
+      );
 
       setConversations(sortedConversations);
 
       setConversationId(conversation.id);
 
       localStorage.setItem(
-        "workmind_conversation_id",
+        CONVERSATION_STORAGE_KEY,
         String(conversation.id)
       );
 
@@ -314,7 +350,7 @@ const handleDeleteConversation = async (conversation) => {
         setConversationId(currentConversationId);
     
         localStorage.setItem(
-          "workmind_conversation_id",
+          CONVERSATION_STORAGE_KEY,
           String(currentConversationId)
         );
       } catch (error) {
@@ -415,133 +451,15 @@ const handleDeleteConversation = async (conversation) => {
               CONVERSATIONS
             </div>
       
-            <div 
-              className="conversation-list"
-            >
-               
-              {console.log(
-                "RENDERED CONVERSATIONS:",
-                conversations.map((c) => ({
-                  id: c.id,
-                  title: c.title,
-                  is_pinned: c.is_pinned,
-                  pinned_at: c.pinned_at,
-                }))
-              )}
-            
-              {conversations.map((conversation) => (
-                <div
-                  key={conversation.id}
-                  className={`conversation ${
-                    conversation.id === conversationId
-                      ? "active"
-                      : ""
-                  }`}
-                  onClick={() =>
-                    handleConversationSelect(conversation)
-                  }
-                >
-                  <span className="conversation-icon">
-                    {conversation.id === conversationId
-                      ? "✦"
-                      : "◌"}
-                  </span>
-      
-                  <span className="conversation-title">
-                    {conversation.title || "New Conversation"}
-                  </span>
-                  
-                  {conversation.is_pinned && (
-                    <span
-                      className="conversation-pin-icon"
-                      title="Pinned conversation"
-                    >
-                      📌
-                    </span>
-                  )}
-      
-                  <button
-                    className="conversation-delete"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setOpenConversationMenu(
-                        openConversationMenu === conversation.id
-                          ? null
-                          : conversation.id
-                      );
-                    }}
-                    title="Conversation options"
-                  >
-                    ⋯
-                  </button>
-
-                  {openConversationMenu === conversation.id && (
-                    <div
-                      className="conversation-menu"
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <button
-                        className="conversation-menu-item"
-                        onClick={async () => {
-                      
-                          try {
-                            const result = await togglePinConversation(
-                              conversation.id
-                            );
-                      
-                            setConversations((prev) => {
-                              const updated = prev.map((item) =>
-                                item.id === conversation.id
-                                  ? {
-                                      ...item,
-                                      is_pinned: result.is_pinned,
-                                      pinned_at: result.pinned_at,
-                                    }
-                                  : item
-                              );
-                            
-                              return updated.sort((a, b) => {
-                                if (a.is_pinned !== b.is_pinned) {
-                                  return a.is_pinned ? -1 : 1;
-                                }
-                            
-                                if (a.is_pinned && b.is_pinned) {
-                                  return new Date(a.pinned_at) - new Date(b.pinned_at);
-                                }
-                            
-                                return a.id - b.id;
-                              });
-                            });
-                      
-                            setOpenConversationMenu(null);
-                          } catch (error) {
-                            setError(error.message || "Unable to update pin status.");
-                          }
-                        }}
-                      >
-                        <span>📌</span>
-                        <span>
-                          {conversation.is_pinned ? "Unpin" : "Pin"}
-                        </span>
-                      </button>
-                  
-                      <button
-                        className="conversation-menu-item delete"
-                        onClick={() => {
-                          setOpenConversationMenu(null);
-                          handleDeleteConversation(conversation);
-                        }}
-                      >
-                        <span>🗑</span>
-                        <span>Delete</span>
-                      </button>
-                    </div>
-                  )}
-
-                </div>
-              ))}
-      
-            </div>
+            <ConversationList
+              conversations={conversations}
+              activeConversationId={conversationId}
+              openMenuId={openConversationMenu}
+              onSelect={handleConversationSelect}
+              onOpenMenu={setOpenConversationMenu}
+              onTogglePin={handleTogglePin}
+              onDelete={handleDeleteConversation}
+            />
 
             {conversations.length === 0 && (
               <div className="conversation-empty">
@@ -607,362 +525,39 @@ const handleDeleteConversation = async (conversation) => {
         </header>
 
         {searchOpen && (
-          <div
-            className="conversation-search-overlay"
-            onClick={() => setSearchOpen(false)}
-          >
-            <div
-              className="conversation-search-modal"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="conversation-search-header">
-                <span>Search conversations</span>
-        
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchOpen(false);
-                    setSearchQuery("");
-                    setSearchResults([]);
-                  }}
-                  title="Close search"
-                >
-                  ×
-                </button>
-              </div>
-        
-              <div className="conversation-search-input-wrapper">
-                <span>⌕</span>
-        
-                <input
-                  autoFocus
-                  type="text"
-                  value={searchQuery}
-                  onChange={(event) =>
-                    handleConversationSearch(event.target.value)
-                  }
-                  placeholder="Search your conversations..."
-                />
-        
-                {searching && <span>...</span>}
-              </div>
-        
-              <div className="conversation-search-results">
-                {searchQuery.trim() && !searching && searchResults.length === 0 && (
-                  <div className="conversation-search-empty">
-                    No conversations found.
-                  </div>
-                )}
-        
-                {!searchQuery.trim() && (
-                  <div className="conversation-search-empty">
-                    Search your conversations by title or message.
-                  </div>
-                )}
-        
-                {searchResults.map((conversation) => (
-                  <button
-                    key={conversation.id}
-                    type="button"
-                    className="conversation-search-result"
-                    onClick={() => handleSearchResultSelect(conversation)}
-                  >
-                    <div className="conversation-search-result-icon">
-                      ◌
-                    </div>
-        
-                    <div className="conversation-search-result-content">
-                      <div className="conversation-search-result-title">
-                        {conversation.title || "New Conversation"}
-                      </div>
-        
-                      {conversation.snippet && (
-                        <div className="conversation-search-result-snippet">
-                          {conversation.snippet}
-                        </div>
-                      )}
-                    </div>
-        
-                    {conversation.is_pinned && (
-                      <span title="Pinned">📌</span>
-                    )}
-                  </button>
-                ))}
-              </div>
-      
-            </div>
-          </div>
+          <ConversationSearch
+            query={searchQuery}
+            results={searchResults}
+            searching={searching}
+            onQueryChange={handleConversationSearch}
+            onSelect={handleSearchResultSelect}
+            onClose={() => {
+              setSearchOpen(false);
+              setSearchQuery("");
+              setSearchResults([]);
+            }}
+          />
         )}
 
         {/* Messages */}
-        <div className="chat-messages">
-          
-          {documents.length > 0 && (
-            <div className="uploaded-documents">
-              {documents.map((document) => (
-                <div
-                  key={document.id}
-                  className="uploaded-document"
-                >
-                  <span className="uploaded-document-icon">📄</span>
-          
-                  <div className="uploaded-document-info">
-                    <span className="uploaded-document-name">
-                      {document.filename}
-                    </span>
-          
-                    <span className="uploaded-document-meta">
-                      {document.page_count} pages
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-          
-            {loadingConversation && (
-              <div className="chat-loading">
-                <span className="chat-loading-icon">✦</span>
-            
-                <span>Preparing your workspace</span>
-            
-                <span className="loading-dots">
-                  <i />
-                  <i />
-                  <i />
-                </span>
-              </div>
-            )}
-
-          {error && (
-            <div className="chat-error">
-              {error}
-            </div>
-          )}
-
-          {messages.length === 0 ? (
-
-            <div className="chat-empty">
-
-              <div className="chat-empty-icon">
-                ✦
-              </div>
-
-              <span className="chat-empty-kicker">
-                WORKMIND AI
-              </span>
-
-              <h1>
-                What can I help
-                <br />
-                <span>you accomplish?</span>
-              </h1>
-
-              <p>
-                Ask questions about your knowledge, analyze
-                information, or let WorkMind help with a task.
-              </p>
-
-              <div className="chat-suggestions">
-
-                <button
-                  onClick={() =>
-                    setMessage("Explain my RAG architecture")
-                  }
-                >
-                  Explain my RAG architecture
-                </button>
-
-                <button
-                  onClick={() =>
-                    setMessage("Summarize my recent documents")
-                  }
-                >
-                  Summarize my recent documents
-                </button>
-
-                <button
-                  onClick={() =>
-                    setMessage("What should I work on today?")
-                  }
-                >
-                  What should I work on today?
-                </button>
-
-              </div>
-
-            </div>
-
-          ) : (
-
-            <div className="message-list">
-
-              {messages.map((item, index) => (
-
-                <div
-                  key={index}
-                  className={`message-row ${item.role}`}
-                >
-
-                  {item.role === "assistant" && (
-                    <div className="message-avatar">
-                      ✦
-                    </div>
-                  )}
-
-                  <div className="message-content">
-
-                    <span className="message-role">
-                      {item.role === "user"
-                        ? "You"
-                        : "WorkMind"}
-                    </span>
-
-                    <div className="message-markdown">
-                      <ReactMarkdown>
-                        {item.content}
-                      </ReactMarkdown>
-                    </div>
-
-                    {item.role === "assistant" && item.sources?.length > 0 && (
-                      <div className="message-sources">
-                        <div className="message-sources-title">
-                          Sources
-                        </div>
-                    
-                        <div className="message-sources-list">
-                          {[
-                            ...new Map(
-                              item.sources.map((source) => [
-                                source.filename || source.file_name,
-                                source,
-                              ])
-                            ).values(),
-                          ].map((source, sourceIndex) => (
-                            <div
-                              className="message-source"
-                              key={source.filename || source.file_name || sourceIndex}
-                            >
-                              {source.filename || source.file_name || `Source ${sourceIndex + 1}`}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    
-                  </div>
-
-                  {item.role === "user" && (
-                    <div className="message-user-avatar">
-                      R
-                    </div>
-                  )}
-
-                </div>
-
-              ))}
-
-              {sending && (
-                <div className="message-row assistant">
-                  <div className="message-avatar">
-                    ✦
-                  </div>
-            
-                  <div className="message-content">
-                    <span className="message-role">
-                      WorkMind
-                    </span>
-            
-                    <div className="workmind-thinking">
-                      <span>WorkMind is thinking</span>
-                      <span className="thinking-dots">
-                        <i />
-                        <i />
-                        <i />
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-            </div>
-          )}
-
-        </div>
+        <MessageList
+          documents={documents}
+          messages={messages}
+          error={error}
+          loadingConversation={loadingConversation}
+          sending={sending}
+          onSuggestionSelect={setMessage}
+        />
 
         {/* Composer */}
-        <div className="chat-composer-area">
-
-          {uploading && (
-            <div className="upload-status">
-              <span className="upload-status-icon">↑</span>
-              <span>Uploading document...</span>
-              <span className="upload-status-dots">
-                <i />
-                <i />
-                <i />
-              </span>
-            </div>
-          )}
-
-          <form
-            className="chat-composer"
-            onSubmit={handleSubmit}
-          >
-
-            <label
-              className={`composer-action ${uploading ? "uploading" : ""}`}
-              title="Upload document"
-            >
-              {uploading ? "↑" : "+"}
-            
-              <input
-                type="file"
-                accept=".pdf,application/pdf"
-                onChange={handleFileUpload}
-                disabled={uploading || sending}
-                hidden
-              />
-            </label>
-
-            <textarea
-              value={message}
-              onChange={(event) =>
-                setMessage(event.target.value)
-              }
-              onKeyDown={(event) => {
-                if (
-                  event.key === "Enter" &&
-                  !event.shiftKey
-                ) {
-                  event.preventDefault();
-                  handleSubmit(event);
-                }
-              }}
-              placeholder="Ask WorkMind anything..."
-              rows={1}
-            />
-
-            <button
-              type="submit"
-              className="composer-send"
-              disabled={
-                !message.trim() ||
-                sending
-              }
-            >
-
-              {sending ? "..." : "↑"}
-            </button>
-
-          </form>
-
-          <div className="composer-hint">
-            <span>WorkMind can make mistakes.</span>
-            <span>Check important information.</span>
-          </div>
-
-        </div>
+        <Composer
+          message={message}
+          sending={sending}
+          uploading={uploading}
+          onMessageChange={setMessage}
+          onSubmit={handleSubmit}
+          onFileUpload={handleFileUpload}
+        />
 
       </section>
     </main>

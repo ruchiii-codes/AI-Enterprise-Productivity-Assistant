@@ -1,13 +1,12 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getCurrentUser } from "../api/auth";
 import { getDocuments } from "../api/documents";
-import Brand from "../components/Brand";
-import ProfileMenu from "../components/ProfileMenu";
+import AppLayout from "../components/layout/AppLayout";
+import { NEW_CONVERSATION } from "../components/layout/nav-items";
 import "../styles/workspace.css";
 
 function Workspace() {
-  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [documents, setDocuments] = useState([]);
 
@@ -26,64 +25,10 @@ function Workspace() {
   }, []);
 
   return (
-    <main className="workspace-page">
-      {/* Sidebar */}
-      <aside className="workspace-sidebar">
-        <div className="sidebar-top">
-          <Brand compact />
-
-          <button
-            className="new-chat-button"
-            onClick={() => navigate("/chat")}
-          >
-            <span>+</span>
-            <span>New conversation</span>
-          </button>
-
-          <div className="sidebar-section">
-            <div className="sidebar-label">
-              WORKSPACE
-            </div>
-
-            <button className="workspace-nav active">
-              <span>⌂</span>
-              Overview
-            </button>
-
-            <button className="workspace-nav">
-              <span>✦</span>
-              Knowledge
-            </button>
-
-            <button className="workspace-nav">
-              <span>◇</span>
-              Agents
-            </button>
-
-            <button className="workspace-nav">
-              <span>⌁</span>
-              Connected tools
-            </button>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main workspace */}
-      <section className="workspace-main">
-        <header className="workspace-header">
-          <div>
-            <span className="header-status">
-              <span />
-              WORKMIND ONLINE
-            </span>
-          </div>
-
-            <div className="header-actions">
-              <ProfileMenu />
-            </div>
-        </header>
-
-        <div className="workspace-content">
+    <AppLayout
+      status="WORKMIND ONLINE"
+      sidebarProps={{ topAction: NEW_CONVERSATION }}
+    >
           {/* Hero */}
           <section className="workspace-hero">
             <div>
@@ -303,9 +248,7 @@ function Workspace() {
               </div>
             </div>
           </section>
-        </div>
-      </section>
-    </main>
+    </AppLayout>
   );
 }
 

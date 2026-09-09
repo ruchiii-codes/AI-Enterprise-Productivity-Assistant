@@ -1,11 +1,11 @@
 .auth-page {
   min-height: 100vh;
   height: auto;
-  display: block !important;
+  display: block;
   padding: 20px;
   background: var(--wm-bg);
   color: var(--wm-text);
-  overflow-y: auto !important;
+  overflow-y: auto;
   overflow-x: hidden;
 }
 

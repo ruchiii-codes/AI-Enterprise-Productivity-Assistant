@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import Brand from "../components/Brand";
+import Brand from "../components/ui/Brand";
+import Field from "../components/ui/Field";
+import PasswordField from "../components/ui/PasswordField";
 import { resetPassword } from "../api/auth";
 import "../styles/auth.css";
 
@@ -141,58 +143,34 @@ function ResetPassword() {
             </div>
 
             <form onSubmit={handleSubmit} className="auth-form">
-              <div className="field">
-                <label htmlFor="password">New password</label>
+              <PasswordField
+                id="password"
+                label="New password"
+                icon="●"
+                placeholder="Enter a new password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                minLength={MIN_PASSWORD_LENGTH}
+                required
+                hint={`Use at least ${MIN_PASSWORD_LENGTH} characters.`}
+                visible={showPassword}
+                onToggleVisibility={() => setShowPassword((value) => !value)}
+              />
 
-                <div className="input-wrap">
-                  <span className="input-icon">●</span>
-
-                  <input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter a new password"
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    minLength={MIN_PASSWORD_LENGTH}
-                    required
-                  />
-
-                  <button
-                    type="button"
-                    className="password-toggle"
-                    onClick={() => setShowPassword((value) => !value)}
-                    aria-label={
-                      showPassword ? "Hide password" : "Show password"
-                    }
-                  >
-                    {showPassword ? "Hide" : "Show"}
-                  </button>
-                </div>
-
-                <small className="field-hint">
-                  Use at least {MIN_PASSWORD_LENGTH} characters.
-                </small>
-              </div>
-
-              <div className="field">
-                <label htmlFor="confirmPassword">Confirm new password</label>
-
-                <div className="input-wrap">
-                  <span className="input-icon">●</span>
-
-                  <input
-                    id="confirmPassword"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Re-enter your new password"
-                    value={confirmPassword}
-                    onChange={(event) =>
-                      setConfirmPassword(event.target.value)
-                    }
-                    minLength={MIN_PASSWORD_LENGTH}
-                    required
-                  />
-                </div>
-              </div>
+              {/* No toggle of its own: this input deliberately follows the
+                  visibility of the field above, as it did when the markup
+                  was inline. */}
+              <Field
+                id="confirmPassword"
+                label="Confirm new password"
+                icon="●"
+                type={showPassword ? "text" : "password"}
+                placeholder="Re-enter your new password"
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                minLength={MIN_PASSWORD_LENGTH}
+                required
+              />
 
               {error && <div className="auth-error">{error}</div>}
 

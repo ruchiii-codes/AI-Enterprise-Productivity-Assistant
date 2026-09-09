@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import Brand from "../components/Brand";
+import Brand from "../components/ui/Brand";
+import Field from "../components/ui/Field";
 import { requestPasswordReset } from "../api/auth";
 import "../styles/auth.css";
 
@@ -90,22 +91,16 @@ function ForgotPassword() {
             </div>
 
             <form onSubmit={handleSubmit} className="auth-form">
-              <div className="field">
-                <label htmlFor="email">Email</label>
-
-                <div className="input-wrap">
-                  <span className="input-icon">@</span>
-
-                  <input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    required
-                  />
-                </div>
-              </div>
+              <Field
+                id="email"
+                label="Email"
+                icon="@"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                required
+              />
 
               {error && <div className="auth-error">{error}</div>}
 

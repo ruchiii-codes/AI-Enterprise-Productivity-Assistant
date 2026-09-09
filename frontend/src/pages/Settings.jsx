@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import Brand from "../components/Brand";
+import AppLayout from "../components/layout/AppLayout";
+import { SETTINGS_NAV } from "../components/layout/nav-items";
 import { getCurrentUser } from "../api/auth";
 import "../styles/workspace.css";
 
@@ -25,39 +25,10 @@ function Settings() {
   }, []);
 
   return (
-    <main className="workspace-page">
-      <aside className="workspace-sidebar">
-        <div className="sidebar-top">
-          <Brand compact />
-
-          <Link to="/workspace" className="new-chat-button">
-            <span>←</span>
-            <span>Back to workspace</span>
-          </Link>
-        </div>
-
-        <div className="sidebar-bottom">
-          <Link to="/workspace" className="workspace-nav">
-            <span>⌂</span>
-            Workspace
-          </Link>
-
-          <Link to="/settings" className="workspace-nav active">
-            <span>⚙</span>
-            Settings
-          </Link>
-        </div>
-      </aside>
-
-      <section className="workspace-main">
-        <header className="workspace-header">
-          <span className="header-status">
-            <span />
-            SETTINGS
-          </span>
-        </header>
-
-        <div className="workspace-content">
+    <AppLayout
+      status="SETTINGS"
+      sidebarProps={{ items: SETTINGS_NAV, placement: "bottom" }}
+    >
           <section className="workspace-hero">
             <div>
               <span className="hero-kicker">WORKSPACE SETTINGS</span>
@@ -120,9 +91,7 @@ function Settings() {
               <span>→</span>
             </div>
           </section>
-        </div>
-      </section>
-    </main>
+    </AppLayout>
   );
 }
 

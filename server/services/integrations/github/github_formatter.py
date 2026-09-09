@@ -80,15 +80,3 @@ def format_pull_requests(pull_requests):
     return response.strip()
 
 
-def format_created_issue(issue):
-    """
-    Formats a created issue.
-    """
-
-    return (
-        "GitHub issue created successfully!\n\n"
-        f"Issue #{issue['number']}\n"
-        f"Title: {issue['title']}\n"
-        f"Status: {issue['state']}\n\n"
-        f"{issue['url']}"
-    )

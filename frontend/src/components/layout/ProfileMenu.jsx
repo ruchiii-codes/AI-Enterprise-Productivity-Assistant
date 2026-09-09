@@ -4,8 +4,8 @@ import { useNavigate } from "react-router-dom";
 import {
   CONVERSATION_STORAGE_KEY,
   THEME_STORAGE_KEY,
-} from "../config/env";
-import { useAuth } from "../hooks/useAuth";
+} from "../../config/env";
+import { useAuth } from "../../hooks/useAuth";
 
 function ProfileMenu() {
   const navigate = useNavigate();
