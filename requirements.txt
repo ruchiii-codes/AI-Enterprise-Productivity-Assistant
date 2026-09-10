@@ -16,6 +16,14 @@ python-dotenv==1.2.2
 SQLAlchemy==2.0.51
 # Runtime, not dev-only: the container entrypoint runs `alembic upgrade head`.
 alembic==1.19.2
+# PostgreSQL driver. The [binary] extra ships prebuilt wheels, so the image
+# needs no libpq or compiler. URL form: postgresql+psycopg://user:pw@host/db
+psycopg[binary]==3.3.5
+
+# --- Rate limiting ---
+# Shared storage for slowapi (which already depends on `limits`). Without it
+# rate limits are per worker process. See server/utils/rate_limiter.py.
+redis==8.1.0
 
 # --- Auth ---
 python-jose==3.5.0

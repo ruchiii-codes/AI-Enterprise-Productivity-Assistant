@@ -1,14 +1,53 @@
+import logging
 import smtplib
 from email.message import EmailMessage
 
 from server.config import settings
 
+logger = logging.getLogger(__name__)
 
-def _send(message: EmailMessage):
-    with smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT) as server:
-        server.starttls()
-        server.login(settings.EMAIL_USERNAME, settings.EMAIL_PASSWORD)
-        server.send_message(message)
+
+def _send(message: EmailMessage) -> bool:
+    """Deliver a message, returning whether it was sent.
+
+    Failures are logged and swallowed rather than raised. That matters most
+    for password reset: /auth/forgot-password deliberately answers the same
+    way whether or not an address is registered, and letting an SMTP error
+    escape would break that. Only registered addresses reach this function, so
+    a raised exception would turn into a 500 for exactly those addresses --
+    handing an attacker the account-enumeration oracle the endpoint exists to
+    deny during any mail outage.
+
+    The timeout matters for the same reason smtplib's default of "none" is
+    dangerous here: a hung SMTP host would otherwise block the worker
+    indefinitely.
+    """
+    if not settings.email_configured:
+        logger.error(
+            "Cannot send %r: EMAIL_HOST, EMAIL_USERNAME and EMAIL_PASSWORD "
+            "are not all configured.",
+            message["Subject"],
+        )
+        return False
+
+    try:
+        with smtplib.SMTP(
+            settings.EMAIL_HOST,
+            settings.EMAIL_PORT,
+            timeout=settings.EMAIL_TIMEOUT,
+        ) as server:
+            server.starttls()
+            server.login(settings.EMAIL_USERNAME, settings.EMAIL_PASSWORD)
+            server.send_message(message)
+
+        logger.info("Sent %r", message["Subject"])
+        return True
+
+    except Exception:
+        # The recipient is deliberately not logged: these messages go to
+        # password-reset and verification addresses.
+        logger.exception("Failed to send %r", message["Subject"])
+        return False
 
 
 def send_verification_email(
@@ -44,7 +83,7 @@ WorkMind
 """
     )
 
-    _send(message)
+    return _send(message)
 
 
 def send_password_reset_email(
@@ -81,4 +120,4 @@ WorkMind
 """
     )
 
-    _send(message)
+    return _send(message)

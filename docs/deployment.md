@@ -81,10 +81,21 @@ Notes:
 - `/app/data` is a volume. Uploads, the ChromaDB vector store and the SQLite
   database live there; without the volume they are lost on every restart.
 - The container runs as a non-root user and exposes `/health` for the
-  load balancer.
+  load balancer. `/health` runs `SELECT 1`, so it returns **503
+  `{"status": "degraded", "database": "unreachable"}`** when the database is
+  gone, and the balancer stops routing there. `DB_CONNECT_TIMEOUT` (5s) bounds
+  how long that probe can block; set the target group's health-check timeout
+  above it.
+- Migrations take a PostgreSQL advisory lock, so rolling out several instances
+  at once is safe: they serialize instead of racing to apply the same DDL.
+- The image sets `DATABASE_URL=sqlite:////app/data/assistant.db` so the
+  database lands on the volume. The application's own default resolves to
+  `/app/assistant.db`, which is *outside* it — a restart would silently
+  recreate an empty schema.
 - `WEB_CONCURRENCY` defaults to **1**. Multiple workers against one SQLite
   file produce "database is locked" errors. Raise it only after pointing
-  `DATABASE_URL` at Postgres/RDS.
+  `DATABASE_URL` at Postgres/RDS **and** setting `REDIS_URL`: rate limits are
+  held per worker process, so N workers multiply every configured limit by N.
 
 ### Persistence
 
@@ -152,6 +163,52 @@ WorkMind uses environment variables for application secrets and external service
 Use `.env.example` as the reference.
 
 Never commit the real `.env` file or other files containing secrets.
+
+### Production settings
+
+Set `ENVIRONMENT=production`. The application then refuses to start unless the
+following are correct, rather than serving traffic in a broken state:
+
+| Variable | Requirement in production | Why it is checked |
+|---|---|---|
+| `JWT_SECRET_KEY` | 32+ chars, not a placeholder | A guessable secret lets anyone mint valid tokens |
+| `FRONTEND_URL` | Public URL, not localhost | Sets the CORS origin *and* the links inside verification and reset emails |
+| `DATABASE_URL` | PostgreSQL, not SQLite | SQLite in a container does not survive a restart or scale past one worker |
+| `EMAIL_HOST` / `EMAIL_USERNAME` / `EMAIL_PASSWORD` | All set | Password reset and email verification cannot deliver without them |
+| `GITHUB_REDIRECT_URI` | https, deployed backend | Defaults to localhost. Checked only when `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` are set |
+| `GOOGLE_REDIRECT_URI`, `GOOGLE_CALENDAR_REDIRECT_URI` | https, deployed backend | Same, gated on the Google client credentials |
+
+Each redirect URI must also be registered, character for character, with the
+provider — the GitHub OAuth app and the Google Cloud console. A URI that is
+correct here but unregistered there fails at the callback, *after* the user
+has already granted consent.
+
+Generate the secret with:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(48))"
+```
+
+`ENVIRONMENT=production` also stops serving `/docs`, `/redoc` and
+`/openapi.json`, and drops `http://localhost:5173` from the allowed CORS
+origins.
+
+### Running more than one instance
+
+Two settings matter once traffic is served by more than one worker or instance:
+
+| Variable | Set to | Consequence of leaving it unset |
+|---|---|---|
+| `REDIS_URL` | ElastiCache endpoint | Rate limits are per worker process, so they are silently multiplied by workers × instances |
+| `TRUSTED_PROXY_COUNT` | `1` behind a single ALB | Rate limiting keys on the load balancer's address, so **all users share one bucket** and one noisy client locks out everybody |
+
+`TRUSTED_PROXY_COUNT` defaults to `0`, which ignores `X-Forwarded-For`
+entirely. That is deliberate: trusting the header with no proxy in front would
+let any client choose its own rate-limit key and bypass every limit.
+
+If Redis becomes unreachable, rate limiting falls back to per-process
+in-memory storage and logs a warning. Endpoints stay up and stay limited,
+just less strictly — a cache outage does not take down login.
 
 ---
 

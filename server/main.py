@@ -4,9 +4,12 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 
 from server.api.auth import router as auth_router
 from server.api.calendar_auth import router as calendar_auth_router
@@ -22,6 +25,7 @@ from server.config import settings
 # Imported for its side effect: defining the ORM classes registers every table
 # on Base.metadata. Alembic's autogenerate compares against it. Do not remove.
 from server.db import models  # noqa: F401
+from server.db.base import engine
 from server.utils.rate_limiter import limiter
 
 logging.basicConfig(
@@ -38,16 +42,29 @@ async def lifespan(app: FastAPI):
     Schema creation is handled by Alembic (`alembic upgrade head`), not by
     create_all, so that schema changes are versioned and reviewable.
     """
-    logger.info("Starting AI Enterprise Productivity Assistant")
+    logger.info(
+        "Starting AI Enterprise Productivity Assistant (environment=%s)",
+        settings.ENVIRONMENT,
+    )
     yield
     logger.info("Shutting down")
 
+
+# The interactive docs publish every route, schema and validation rule. That is
+# useful in development and is an inventory of the attack surface in
+# production, so they are served only outside it.
+docs_urls = (
+    {"docs_url": None, "redoc_url": None, "openapi_url": None}
+    if settings.is_production
+    else {}
+)
 
 app = FastAPI(
     title="AI Enterprise Productivity Assistant",
     description="Backend API for the AI Enterprise Productivity Assistant",
     version="1.0.0",
     lifespan=lifespan,
+    **docs_urls,
 )
 
 # -----------------------------
@@ -142,6 +159,30 @@ def home():
 
 @app.get("/health")
 def health():
-    return {
-        "status": "running"
+    """Liveness and readiness for the load balancer.
+
+    The database is checked because an instance that cannot reach RDS cannot
+    serve a single useful request. Reporting "running" on process liveness
+    alone would keep the load balancer sending traffic to an instance that
+    fails every one of them.
+    """
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+
+        database_ok = True
+
+    except SQLAlchemyError:
+        logger.exception("Health check failed: database unreachable")
+        database_ok = False
+
+    payload = {
+        "status": "running" if database_ok else "degraded",
+        "database": "ok" if database_ok else "unreachable",
     }
+
+    if database_ok:
+        return payload
+
+    # 503 tells the load balancer to stop routing here until it recovers.
+    return JSONResponse(status_code=503, content=payload)

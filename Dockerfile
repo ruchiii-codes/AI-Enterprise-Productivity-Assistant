@@ -5,6 +5,15 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
 
+# The application's default DATABASE_URL resolves to /app/assistant.db, which
+# is OUTSIDE the /app/data volume declared below -- so a container restart
+# would silently recreate an empty schema and lose every user and
+# conversation. Overriding it here puts the SQLite file on the volume.
+#
+# Production should override this again with a PostgreSQL URL; ENVIRONMENT
+# =production refuses to start on SQLite for exactly that reason.
+ENV DATABASE_URL=sqlite:////app/data/assistant.db
+
 WORKDIR /app
 
 # curl is used by HEALTHCHECK; build tooling is needed by some wheels.
@@ -36,7 +45,10 @@ VOLUME ["/app/data"]
 
 EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+# /health probes the database, and DB_CONNECT_TIMEOUT bounds that at 5s, so
+# the client timeout must sit above it -- otherwise curl gives up first and a
+# degraded instance never reports its own 503.
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -fsS http://localhost:8000/health || exit 1
 
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
