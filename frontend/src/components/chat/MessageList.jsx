@@ -6,6 +6,11 @@
  * prompt chips.
  */
 import ReactMarkdown from "react-markdown";
+// Tables are a GitHub extension, not part of CommonMark, so react-markdown
+// renders them as literal pipe characters without this plugin. It also
+// enables strikethrough, task lists and bare-URL autolinking. The table
+// styling in styles/chat.css was already written for this.
+import remarkGfm from "remark-gfm";
 
 export function MessageList({
   documents,
@@ -143,7 +148,7 @@ export function MessageList({
                     </span>
 
                     <div className="message-markdown">
-                      <ReactMarkdown>
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {item.content}
                       </ReactMarkdown>
                     </div>
