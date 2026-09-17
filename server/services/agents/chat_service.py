@@ -11,6 +11,7 @@ previous implementation.
 import logging
 
 from fastapi import HTTPException
+from langfuse import observe, propagate_attributes
 from openai import APIConnectionError, APIError, APITimeoutError
 from sqlalchemy.orm import Session
 
@@ -44,7 +45,35 @@ RETRIEVAL_SYSTEM_PROMPT = (
 )
 
 
+@observe(name="chat-turn")
 def handle_chat(
+    db: Session,
+    current_user: User,
+    chat_request: ChatRequest,
+) -> dict:
+    """Trace boundary for one chat turn.
+
+    A single turn can make up to six LLM calls -- the planner, query rewrite,
+    multi-query, HyDE, optional context compression, and the final answer.
+    Opening one observation here groups them into a single trace instead of
+    six unrelated ones, and propagate_attributes stamps the user and
+    conversation onto every child so a trace is findable by either.
+
+    The work itself stays in _handle_chat, unchanged, so that adding tracing
+    did not require re-indenting a 230-line function with three exit points.
+    """
+    with propagate_attributes(
+        user_id=str(current_user.id),
+        session_id=str(chat_request.conversation_id),
+    ):
+        return _handle_chat(
+            db=db,
+            current_user=current_user,
+            chat_request=chat_request,
+        )
+
+
+def _handle_chat(
     db: Session,
     current_user: User,
     chat_request: ChatRequest,
@@ -232,7 +261,7 @@ def handle_chat(
 
     # Generate AI response
     try:
-        answer = generate_response(messages)
+        answer = generate_response(messages, name="answer")
 
         add_message(
             db=db,

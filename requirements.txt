@@ -34,6 +34,11 @@ email-validator==2.3.0
 # --- LLM ---
 openai==2.46.0
 
+# --- Observability ---
+# Traces every LLM call (prompt, response, tokens, latency, cost) to Langfuse.
+# Pulls in OpenTelemetry; a few MB beside torch's 520 MB.
+langfuse==4.15.4
+
 # --- RAG: embeddings, vector store, retrieval ---
 chromadb==1.5.9
 sentence-transformers==5.6.0

@@ -2,11 +2,15 @@ import json
 import logging
 from datetime import datetime, timedelta
 
+# OpenAI's own client class, re-exported by Langfuse. Importing it from here
+# applies Langfuse's instrumentation to the SDK's methods, so every call made
+# through this client is traced. The class itself is unchanged -- the custom
+# base_url and api_key below are passed exactly as before.
+from langfuse.openai import OpenAI
 from openai import (
     APIConnectionError,
     APIError,
     APITimeoutError,
-    OpenAI,
 )
 
 from server.config import settings
@@ -19,7 +23,14 @@ client = OpenAI(
 )
 
 
-def generate_response(messages):
+def generate_response(messages, name: str = "llm-call"):
+    """Send messages to the LLM and return the reply text.
+
+    `name` labels the call in Langfuse. It defaults to something neutral
+    because this function serves six different purposes -- query rewriting,
+    multi-query, HyDE, context compression, summarisation and the final
+    answer -- so a fixed label here would misreport most of them.
+    """
 
     try:
         if isinstance(messages, str):
@@ -35,6 +46,13 @@ def generate_response(messages):
         response = client.chat.completions.create(
             model="openai/gpt-oss-20b",
             messages=messages,
+            # Asks OpenRouter to return token usage, which Langfuse needs to
+            # report token counts and cost. Without it a trace shows the
+            # prompt and reply but no spend.
+            extra_body={"usage": {"include": True}},
+            # Consumed by the Langfuse wrapper to label the generation; not
+            # forwarded to OpenRouter.
+            name=name,
         )
 
         answer = response.choices[0].message.content
@@ -778,6 +796,8 @@ Return:
         model="openai/gpt-oss-20b",
         messages=messages,
         temperature=0,
+        extra_body={"usage": {"include": True}},
+        name="planner",
     )
 
     content = response.choices[0].message.content.strip()

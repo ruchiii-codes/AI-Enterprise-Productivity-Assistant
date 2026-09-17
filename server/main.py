@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from langfuse import get_client
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
@@ -47,6 +48,20 @@ async def lifespan(app: FastAPI):
         settings.ENVIRONMENT,
     )
     yield
+
+    # Langfuse batches traces on a background thread; a container that stops
+    # without flushing loses whatever is still buffered.
+    #
+    # Guarded on the flag rather than called unconditionally: with tracing off
+    # there is nothing buffered to lose, and merely asking for the client logs
+    # "Authentication error: ... initialized without public_key", which reads
+    # like a fault on every shutdown of a correctly configured deployment.
+    if settings.LANGFUSE_TRACING_ENABLED:
+        try:
+            get_client().flush()
+        except Exception:
+            logger.warning("Langfuse flush on shutdown failed", exc_info=True)
+
     logger.info("Shutting down")
 
 

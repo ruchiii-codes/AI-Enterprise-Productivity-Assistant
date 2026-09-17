@@ -11,6 +11,7 @@ current working directory. Previously ``data/uploads``, ``data/chroma_db`` and
 directory silently created an empty database and vector store.
 """
 
+import os
 from pathlib import Path
 from typing import Literal, Optional
 
@@ -124,6 +125,17 @@ class Settings(BaseSettings):
     EMAIL_USERNAME: Optional[str] = None
     EMAIL_PASSWORD: Optional[str] = None
     EMAIL_TIMEOUT: int = 10
+
+    # -----------------------------
+    # Observability (Langfuse)
+    # -----------------------------
+    # Tracing is off unless explicitly enabled, so local runs and the test
+    # suite never ship data. Missing keys are safe either way: the SDK logs a
+    # warning and installs a no-op tracer rather than raising.
+    LANGFUSE_PUBLIC_KEY: Optional[str] = None
+    LANGFUSE_SECRET_KEY: Optional[str] = None
+    LANGFUSE_BASE_URL: str = "https://cloud.langfuse.com"
+    LANGFUSE_TRACING_ENABLED: bool = False
 
     # -----------------------------
     # Rate limiting
@@ -271,3 +283,19 @@ settings = Settings()
 # Directories the application writes to must exist before first use.
 settings.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 settings.CHROMA_DIR.mkdir(parents=True, exist_ok=True)
+
+# The Langfuse SDK reads its configuration from os.environ directly, and
+# pydantic-settings does not export .env values there -- a key present only in
+# .env reaches `settings` but never os.environ. Without this bridge, tracing
+# stays silently off in local development while appearing configured.
+#
+# setdefault rather than assignment: a real environment variable (Elastic
+# Beanstalk sets real ones) must always win over the .env file.
+for _name, _value in (
+    ("LANGFUSE_PUBLIC_KEY", settings.LANGFUSE_PUBLIC_KEY),
+    ("LANGFUSE_SECRET_KEY", settings.LANGFUSE_SECRET_KEY),
+    ("LANGFUSE_BASE_URL", settings.LANGFUSE_BASE_URL),
+    ("LANGFUSE_TRACING_ENABLED", str(settings.LANGFUSE_TRACING_ENABLED).lower()),
+):
+    if _value:
+        os.environ.setdefault(_name, _value)
