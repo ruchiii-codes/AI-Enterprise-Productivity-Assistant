@@ -16,13 +16,20 @@ credentials/
 .gitignore
 .github
 
-# Local data and artifacts (the image creates empty data dirs itself)
+# Local data and artifacts. data/chroma_db is deliberately INCLUDED: the image
+# ships the existing vector store as a seed (see Dockerfile). data/uploads
+# stays out -- 33 MB, and only summarize_latest_pdf reads it.
 assistant.db
 *.db
 backups/
 data/uploads
-data/chroma_db
 data/*_report.json
+
+# Chroma's transient SQLite files must never be baked. A stale journal
+# replayed against a store that has already moved on would corrupt it.
+data/chroma_db/**/*.sqlite3-journal
+data/chroma_db/**/*.sqlite3-wal
+data/chroma_db/**/*.sqlite3-shm
 
 # Frontend (deployed separately)
 frontend/

@@ -1,6 +1,22 @@
 #!/bin/sh
 set -e
 
+# Put the image's vector store in place on first boot. /app/data is a volume,
+# so on a fresh one this directory is empty and the seed is copied in. An
+# existing store is left alone, so documents uploaded in production survive a
+# restart instead of being reverted to the image's snapshot.
+#
+# mkdir -p keeps this self-contained: the Dockerfile already creates the
+# directory, but a bind-mounted /app/data would not necessarily have it.
+mkdir -p /app/data/chroma_db
+
+if [ -z "$(ls -A /app/data/chroma_db 2>/dev/null)" ]; then
+    echo "Seeding vector store from image..."
+    cp -r /app/seed/chroma_db/. /app/data/chroma_db/
+else
+    echo "Vector store already present; leaving it untouched."
+fi
+
 # Bring the database schema up to date before serving. On a fresh volume this
 # creates every table; on an existing one it applies only new revisions.
 echo "Applying database migrations..."

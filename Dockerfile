@@ -21,6 +21,12 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
 
+# CPU-only torch, installed before requirements.txt so sentence-transformers
+# finds it already satisfied. PyPI's default Linux wheel bundles ~3 GB of CUDA
+# libraries that a GPU-less instance can never use. Pinned to the version the
+# app is developed and tested against (requirements.lock.txt).
+RUN pip install --no-cache-dir torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+
 # Dependencies first, so this layer caches across source changes.
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
@@ -30,6 +36,17 @@ COPY server ./server
 COPY alembic ./alembic
 COPY alembic.ini .
 COPY data/evaluation_questions.json data/agent_evaluation_questions.json ./data/
+
+# Seed copy of the vector store, deliberately OUTSIDE /app/data: that path is
+# a volume, and a volume inherits image content only when it happens to be
+# empty -- an existing one masks it silently. docker-entrypoint.sh copies this
+# into place only when the store is empty, so documents uploaded in production
+# are not reverted to the image's snapshot on every restart.
+#
+# Without the store, every retrieval returns nothing and the assistant reports
+# it cannot find the documents, even though the rows exist in Postgres.
+COPY data/chroma_db ./seed/chroma_db
+
 COPY docker-entrypoint.sh .
 
 # The application writes to these; they are declared as volumes below so that
