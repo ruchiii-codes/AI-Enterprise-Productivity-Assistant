@@ -1,39 +1,62 @@
-import os
+from pathlib import Path
 
 from server.config import settings
+from server.db.base import SessionLocal
+from server.db.models import Document
 from server.services.agents.retriever_agent import retrieve
 from server.services.providers.llm_service import generate_response
 from server.services.rag.pdf_service import extract_text_from_pdf
 
-UPLOAD_FOLDER = str(settings.UPLOAD_DIR)
 
-
-def summarize_latest_pdf():
+def summarize_latest_pdf(user_id=None, conversation_id=None):
     """
-    Summarizes the most recently uploaded PDF.
+    Summarize the caller's most recently uploaded PDF.
     """
 
-    pdf_files = [
-        f for f in os.listdir(UPLOAD_FOLDER)
-        if f.endswith(".pdf")
-    ]
-
-    if not pdf_files:
+    # Without an owner there is no safe document to pick. The directory scan
+    # this replaces took whichever PDF was newest on disk, which in a
+    # multi-user deployment is usually somebody else's.
+    if user_id is None:
         return None
 
-    latest_pdf = max(
-        pdf_files,
-        key=lambda f: os.path.getmtime(
-            os.path.join(UPLOAD_FOLDER, f)
+    db = SessionLocal()
+
+    try:
+        query = db.query(Document).filter(Document.user_id == user_id)
+
+        # Scoped to the conversation when there is one, so "summarize this
+        # pdf" means the one in this chat -- the scoping retrieval uses too.
+        if conversation_id is not None:
+            query = query.filter(
+                Document.conversation_id == conversation_id
+            )
+
+        document = (
+            query
+            .order_by(Document.id.desc())
+            .first()
         )
-    )
+    finally:
+        db.close()
 
-    pdf_path = os.path.join(
-        UPLOAD_FOLDER,
-        latest_pdf,
-    )
+    if document is None:
+        return None
 
-    document_text = extract_text_from_pdf(pdf_path)
+    pdf_path = Path(document.file_path)
+
+    # Rows written on another machine hold a path that does not resolve here,
+    # so fall back to the stored file's name in the current upload directory.
+    if not pdf_path.exists():
+        pdf_path = settings.UPLOAD_DIR / pdf_path.name
+
+    # Never read outside the upload directory, whatever the row says.
+    if pdf_path.resolve().parent != settings.UPLOAD_DIR.resolve():
+        return None
+
+    if not pdf_path.exists():
+        return None
+
+    document_text = extract_text_from_pdf(str(pdf_path))
 
     prompt = f"""
 You are an AI assistant.
@@ -54,12 +77,16 @@ Document:
     return generate_response(prompt)
 
 
-def summarize_topic(question: str):
+def summarize_topic(question: str, user_id=None, conversation_id=None):
     """
     Summarize only the relevant part of the document.
     """
 
-    results = retrieve(question)
+    results = retrieve(
+        question,
+        user_id=user_id,
+        conversation_id=conversation_id,
+    )
 
     if results["prompt"] is None:
         return None
@@ -109,7 +136,7 @@ Subject: {subject}
     return generate_response(prompt)
 
 
-def summarize(question: str):
+def summarize(question: str, user_id=None, conversation_id=None):
     """
     Smart Summarizer Agent.
     """
@@ -122,7 +149,14 @@ def summarize(question: str):
         or "the pdf" in query
         or "entire pdf" in query
     ):
-        return summarize_latest_pdf()
+        return summarize_latest_pdf(
+            user_id=user_id,
+            conversation_id=conversation_id,
+        )
 
     # Topic summary
-    return summarize_topic(question)
+    return summarize_topic(
+        question,
+        user_id=user_id,
+        conversation_id=conversation_id,
+    )

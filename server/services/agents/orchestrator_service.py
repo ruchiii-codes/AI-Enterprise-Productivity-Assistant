@@ -44,7 +44,11 @@ def execute(
     # -----------------------------
     elif route == Route.SUMMARIZATION:
 
-        summary = summarize(question)
+        summary = summarize(
+            question,
+            user_id=user_id,
+            conversation_id=conversation_id,
+        )
 
         if summary is None:
             return {

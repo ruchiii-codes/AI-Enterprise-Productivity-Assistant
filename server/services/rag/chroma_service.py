@@ -87,13 +87,20 @@ def search_embeddings(
         "n_results": top_k,
     }
 
-    if user_id is not None and conversation_id is not None:
-        query_kwargs["where"] = {
-            "$and": [
-                {"user_id": user_id},
-                {"conversation_id": conversation_id},
-            ]
-        }
+    # Filter on whatever scope the caller supplied. Requiring both ids meant a
+    # caller that knew only the user searched every user's chunks instead.
+    conditions = []
+
+    if user_id is not None:
+        conditions.append({"user_id": user_id})
+
+    if conversation_id is not None:
+        conditions.append({"conversation_id": conversation_id})
+
+    if len(conditions) == 1:
+        query_kwargs["where"] = conditions[0]
+    elif conditions:
+        query_kwargs["where"] = {"$and": conditions}
 
     results = collection.query(**query_kwargs)
 
