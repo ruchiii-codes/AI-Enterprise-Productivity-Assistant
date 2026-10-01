@@ -23,8 +23,9 @@ def process_document(
     Complete document processing pipeline.
     """
 
-    # Save PDF
-    file_path = save_uploaded_file(file)
+    # Save PDF. The name on disk is generated; display_name is what the user
+    # actually uploaded, kept for the documents list and the chunk metadata.
+    file_path, display_name = save_uploaded_file(file, user_id)
 
     # Get PDF page count
     page_count = len(PdfReader(str(file_path)).pages)
@@ -69,7 +70,7 @@ def process_document(
     store_embeddings(
         chunks=child_chunks,
         embeddings=embeddings,
-        filename=file_path.name,
+        filename=display_name,
         parent_chunks=parent_chunks,
         user_id=user_id,
         conversation_id=conversation_id,
@@ -80,7 +81,7 @@ def process_document(
 
     return {
     "message": "File uploaded successfully.",
-    "filename": file_path.name,
+    "filename": display_name,
     "file_path": str(file_path),
     "page_count": page_count,
     "characters": len(text),
