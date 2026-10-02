@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import UploadFile
 from pypdf import PdfReader
 
@@ -12,6 +14,8 @@ from server.services.rag.parent_child_service import create_parent_child_chunks
 from server.services.rag.pdf_service import extract_text_from_pdf
 from server.services.rag.text_cleaner import clean_text
 from server.services.rag.upload_service import save_uploaded_file
+
+logger = logging.getLogger(__name__)
 
 
 def process_document(
@@ -76,8 +80,11 @@ def process_document(
         conversation_id=conversation_id,
     )
 
-    # Print total stored chunks
-    print(f"Total chunks stored: {get_collection_count()}")
+    logger.info(
+        "Stored %d chunks; collection now holds %d",
+        len(child_chunks),
+        get_collection_count(),
+    )
 
     return {
     "message": "File uploaded successfully.",

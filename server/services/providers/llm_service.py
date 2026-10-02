@@ -803,7 +803,17 @@ Return:
     content = response.choices[0].message.content.strip()
 
     result = json.loads(content)
-    print("PLANNER RESULT:", result)
+    # The parameters can hold an email recipient, subject and body, calendar
+    # event text, or mail search terms -- the user's content, and in the case
+    # of a recipient, someone else's address. Only the routing decision and
+    # the parameter names are logged, never their values.
+    logger.debug(
+        "Planner route=%s tool=%s intent=%s parameters=%s",
+        result.get("route"),
+        result.get("tool"),
+        result.get("intent"),
+        sorted(result.get("parameters", {})),
+    )
 
     allowed_routes = {
         "retrieval",

@@ -1,9 +1,12 @@
+import logging
 import uuid
 
 import chromadb
 from chromadb.config import Settings as ChromaSettings
 
 from server.config import settings
+
+logger = logging.getLogger(__name__)
 
 # Create a persistent ChromaDB client
 chroma_client = chromadb.PersistentClient(
@@ -27,11 +30,12 @@ def store_embeddings(
     """
     Store child chunks and their parent chunks in ChromaDB.
     """
-    print(
-        "DEBUG CHROMA:",
-        "user_id =", user_id,
-        "| conversation_id =", conversation_id,
-        "| filename =", filename,
+    # The filename is the user's own wording, so it stays out of the logs.
+    logger.debug(
+        "Storing %d chunks for user %s, conversation %s",
+        len(chunks),
+        user_id,
+        conversation_id,
     )
 
     ids = []

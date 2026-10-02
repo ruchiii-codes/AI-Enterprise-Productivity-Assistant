@@ -1,6 +1,9 @@
+import logging
 from typing import List
 
 from sentence_transformers import CrossEncoder
+
+logger = logging.getLogger(__name__)
 
 reranker = CrossEncoder(
     "cross-encoder/ms-marco-MiniLM-L-6-v2"
@@ -21,16 +24,13 @@ def rerank_documents(
 
     scored_documents = list(zip(documents, scores))
 
-    print("\n" + "=" * 80)
-    print("RERANKER SCORES")
-    print("=" * 80)
-
-    for document, score in scored_documents:
-        print("SCORE:", score)
-        print("DOCUMENT:", document[:300])
-        print("-" * 80)
-
-    print("=" * 80 + "\n")
+    if len(scores):
+        logger.debug(
+            "Reranked %d documents (score %.3f to %.3f)",
+            len(scored_documents),
+            float(min(scores)),
+            float(max(scores)),
+        )
 
     scored_documents.sort(
         key=lambda x: x[1],

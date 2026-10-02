@@ -1,3 +1,5 @@
+import logging
+
 from server.services.rag import bm25_store
 from server.services.rag.bm25_service import bm25_search
 from server.services.rag.chroma_service import (
@@ -10,6 +12,8 @@ from server.services.rag.multi_query_service import generate_multi_queries
 from server.services.rag.prompt_service import build_prompt
 from server.services.rag.query_rewrite_service import rewrite_query
 from server.services.rag.reranker_service import rerank_documents
+
+logger = logging.getLogger(__name__)
 
 
 def search_documents(
@@ -81,21 +85,18 @@ def search_documents(
     metadatas = [item[0] for item in unique_results.values()]
     distances = [item[1] for item in unique_results.values()]
 
-    print("\n" + "=" * 80)
-    print("RETRIEVAL DISTANCES")
-    print("=" * 80)
-
-    for document, metadata, distance in zip(
-        documents,
-        metadatas,
-        distances,
-    ):
-        print("DISTANCE:", distance)
-        print("FILENAME:", metadata.get("filename"))
-        print("DOCUMENT:", document[:200])
-        print("-" * 80)
-
-    print("=" * 80 + "\n")
+    # Counts and distances only. These lines reach the Elastic Beanstalk logs
+    # and on to CloudWatch, where a user's document text would outlive the
+    # request and be readable by anyone with console access.
+    if distances:
+        logger.debug(
+            "Retrieved %d candidate chunks (distance %.3f to %.3f)",
+            len(documents),
+            min(distances),
+            max(distances),
+        )
+    else:
+        logger.debug("Retrieved no candidate chunks")
 
     filtered_documents = []
     filtered_metadatas = []
@@ -111,6 +112,12 @@ def search_documents(
             filtered_metadatas.append(metadata)
             filtered_distances.append(distance)
 
+    logger.debug(
+        "%d of %d chunks passed the distance filter",
+        len(filtered_documents),
+        len(documents),
+    )
+
     if not filtered_documents:
         return {
             "prompt": None,
@@ -121,13 +128,6 @@ def search_documents(
 
     # Default (semantic only)
     final_documents = filtered_documents
-
-    print("\n" + "=" * 80)
-    print("AFTER DISTANCE FILTER")
-    print("=" * 80)
-    for doc in final_documents:
-        print(doc[:500])
-    print("=" * 80)
 
     # Hybrid Search
     if bm25_store.bm25_index is not None:
@@ -153,6 +153,13 @@ def search_documents(
             min_score=0.1,
         )
 
+        logger.debug(
+            "Hybrid search: %d semantic + %d BM25 -> %d after reranking",
+            len(filtered_documents),
+            len(bm25_results),
+            len(final_documents),
+        )
+
         # Keep metadata aligned with the final reranked documents
         metadata_by_document = {
             document: metadata
@@ -171,12 +178,12 @@ def search_documents(
     else:
         final_metadatas = filtered_metadatas
 
-        print("\n" + "=" * 80)
-        print("AFTER RERANKING")
-        print("=" * 80)
-        for doc in final_documents:
-            print(doc[:500])
-        print("=" * 80)
+        # Nothing was reranked on this branch -- the message here previously
+        # said "AFTER RERANKING", which was the opposite of what happened.
+        logger.debug(
+            "Semantic-only search: %d chunks, BM25 index not built",
+            len(final_documents),
+        )
 
     # Use the actual retrieved documents as context.
     # Do not rewrite/compress them with an LLM here,
@@ -193,11 +200,11 @@ def search_documents(
             "distances": [],
         }
 
-    print("\n" + "=" * 80)
-    print("FINAL RETRIEVED CONTEXT")
-    print("=" * 80)
-    print(retrieved_context)
-    print("=" * 80 + "\n")
+    logger.debug(
+        "Final context: %d chunks, %d characters",
+        len(final_documents),
+        len(retrieved_context),
+    )
 
     prompt = build_prompt(
         query,
