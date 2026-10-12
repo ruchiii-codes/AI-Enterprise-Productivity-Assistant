@@ -17,6 +17,10 @@ import { getConversationMessages } from "../api/messages";
 import { sendChatMessage } from "../api/chat";
 import { uploadDocument } from "../api/documents";
 import { getConversationDocuments } from "../api/documents";
+// Chat renders the sidebar and ProfileMenu without AppLayout, so it must load
+// the layout styles itself: .new-chat-button and .user-avatar are defined only
+// in workspace.css. Imported first so chat.css overrides still win.
+import "../styles/workspace.css";
 import "../styles/chat.css";
 import ProfileMenu from "../components/layout/ProfileMenu";
 
