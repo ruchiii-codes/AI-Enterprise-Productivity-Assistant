@@ -153,6 +153,20 @@ def search_documents(
             min_score=0.1,
         )
 
+        # The cross-encoder's floor can reject every candidate, including ones
+        # the distance filter accepted. Its scores are unbounded logits, not
+        # probabilities, so a fixed floor is not comparable across content --
+        # measured scores for a correctly retrieved document ran from -11.5 to
+        # -11.0, far below 0.1. Dropping a good semantic match because a
+        # secondary ranking signal scored it low leaves the user with "nothing
+        # found" while the answer sits in the store.
+        if not final_documents:
+            logger.debug(
+                "Reranking returned nothing; falling back to %d semantic matches",
+                len(filtered_documents),
+            )
+            final_documents = filtered_documents[:3]
+
         logger.debug(
             "Hybrid search: %d semantic + %d BM25 -> %d after reranking",
             len(filtered_documents),
