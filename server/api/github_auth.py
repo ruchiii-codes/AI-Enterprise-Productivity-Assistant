@@ -83,7 +83,10 @@ def github_start(
     params = {
         "client_id": settings.GITHUB_CLIENT_ID,
         "redirect_uri": settings.GITHUB_REDIRECT_URI,
-        "scope": "repo",
+        # public_repo, not repo: the integration reads public activity and
+        # opens issues. repo would additionally grant read and write access to
+        # every private repository the user owns.
+        "scope": "public_repo",
         "state": state,
     }
 

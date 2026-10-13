@@ -812,7 +812,7 @@ Return:
         result.get("route"),
         result.get("tool"),
         result.get("intent"),
-        sorted(result.get("parameters", {})),
+        sorted(result.get("parameters") or {}),
     )
 
     allowed_routes = {

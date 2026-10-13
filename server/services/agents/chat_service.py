@@ -139,7 +139,10 @@ def _handle_chat(
         route.value,
         plan.get("tool"),
         plan.get("intent"),
-        plan.get("parameters"),
+        # Names only: the values carry an email recipient, subject and body, or
+        # calendar and mail search terms -- the user's content, and in the case
+        # of a recipient, someone else's address.
+        sorted(plan.get("parameters") or {}),
     )
 
     # -----------------------------
